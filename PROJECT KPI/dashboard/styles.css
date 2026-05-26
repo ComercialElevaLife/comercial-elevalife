@@ -442,6 +442,10 @@ select:focus-visible {
   background: linear-gradient(100deg, #007b82 0%, #00a1a0 100%);
 }
 
+.crm-stage-fill-loss {
+  background: linear-gradient(100deg, #b74a4a 0%, #d96a6a 100%);
+}
+
 .crm-workspace {
   display: grid;
   grid-template-columns: minmax(320px, 34%) minmax(0, 66%);

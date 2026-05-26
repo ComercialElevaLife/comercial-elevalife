@@ -315,6 +315,18 @@
             <h3>Valor em Vendas</h3>
             <p id="crmValorVendas">-</p>
           </article>
+          <article class="crm-kpi">
+            <h3>Perdas no Período</h3>
+            <p id="crmTotalPerdidas">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Taxa de Perda (%)</h3>
+            <p id="crmTaxaPerda">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Top Motivo de Perda</h3>
+            <p id="crmTopLossReason">-</p>
+          </article>
         </div>
         <div id="crmStageBars" class="crm-stage-bars top-gap"></div>
       </section>
@@ -351,6 +363,7 @@
                 <option value="Lead">Lead</option>
                 <option value="Proposta">Proposta</option>
                 <option value="Venda">Venda</option>
+                <option value="PERDIDA">Perdida</option>
               </select>
             </label>
             <label>
@@ -456,8 +469,18 @@
             </select>
           </label>
           <label id="leadLossReasonWrap" hidden>Motivo da perda
-            <input id="leadLossReason" type="text" placeholder="Ex.: Preço, timing, concorrência, sem orçamento" />
+            <input id="leadLossReason" type="text" list="leadLossReasonList" placeholder="Ex.: Preço, timing, concorrência, sem orçamento" />
           </label>
+          <datalist id="leadLossReasonList">
+            <option value="Preço"></option>
+            <option value="Sem orçamento"></option>
+            <option value="Concorrência"></option>
+            <option value="Sem retorno do cliente"></option>
+            <option value="Timing"></option>
+            <option value="Escopo não aderente"></option>
+            <option value="Prioridade interna do cliente"></option>
+            <option value="Projeto cancelado pelo cliente"></option>
+          </datalist>
           <label>Houve desconto?
             <select id="leadDiscountFlag">
               <option value="N">Não</option>

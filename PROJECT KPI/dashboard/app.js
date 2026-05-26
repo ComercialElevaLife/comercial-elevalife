@@ -259,6 +259,9 @@ const refs = {
   crmTaxaConversao: document.getElementById("crmTaxaConversao"),
   crmValorPropostas: document.getElementById("crmValorPropostas"),
   crmValorVendas: document.getElementById("crmValorVendas"),
+  crmTotalPerdidas: document.getElementById("crmTotalPerdidas"),
+  crmTaxaPerda: document.getElementById("crmTaxaPerda"),
+  crmTopLossReason: document.getElementById("crmTopLossReason"),
   crmStageBars: document.getElementById("crmStageBars"),
   crmKanban: document.getElementById("crmKanban"),
   crmWorkspace: document.getElementById("crmWorkspace"),
@@ -2992,7 +2995,12 @@ function getFilteredLeads(leads, vendasRows) {
   return leads.filter((lead) => {
     if (!passesCrmSharedFilters(lead, vendasRows)) return false;
     const stage = getLeadStage(lead, vendasRows);
-    if (stageFilter !== "TODOS" && stage !== stageFilter) return false;
+    const lost = String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
+    if (stageFilter === "PERDIDA") {
+      if (!lost) return false;
+    } else if (stageFilter !== "TODOS" && stage !== stageFilter) {
+      return false;
+    }
     if (!search) return true;
     const text = [
       lead.Nome,
@@ -3021,9 +3029,19 @@ function renderCrmOverview(leads, vendasRows) {
   const totalLeads = leads.length;
   const totalPropostas = leads.filter((lead) => leadHasProposta(lead, vendasRows)).length;
   const totalVendas = leads.filter((lead) => leadHasVenda(lead, vendasRows)).length;
+  const lostLeads = leads.filter((lead) => String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA").length;
   const conversao = totalPropostas > 0 ? (totalVendas / totalPropostas) * 100 : 0;
+  const taxaPerda = totalPropostas > 0 ? (lostLeads / totalPropostas) * 100 : 0;
   const valorPropostas = leads.reduce((sum, lead) => sum + toNumber(lead["Valor Proposta"]), 0);
   const valorVendas = (vendasRows || []).reduce((sum, row) => sum + toNumber(row["Valor"]), 0);
+  const lossReasonMap = new Map();
+  for (const lead of leads) {
+    if (String(lead["Status Oportunidade"] || "").toUpperCase() !== "PERDIDA") continue;
+    const reason = String(lead["Motivo Perda"] || "").trim() || "Não informado";
+    lossReasonMap.set(reason, (lossReasonMap.get(reason) || 0) + 1);
+  }
+  const topLossReasonEntry = [...lossReasonMap.entries()].sort((a, b) => b[1] - a[1])[0] || null;
+  const topLossReasonLabel = topLossReasonEntry ? `${topLossReasonEntry[0]} (${topLossReasonEntry[1]})` : "-";
 
   refs.crmTotalLeads.textContent = NUM.format(totalLeads);
   refs.crmTotalPropostas.textContent = NUM.format(totalPropostas);
@@ -3031,15 +3049,19 @@ function renderCrmOverview(leads, vendasRows) {
   refs.crmTaxaConversao.textContent = `${conversao.toFixed(1).replace(".", ",")}%`;
   refs.crmValorPropostas.textContent = BRL.format(valorPropostas);
   refs.crmValorVendas.textContent = BRL.format(valorVendas);
+  if (refs.crmTotalPerdidas) refs.crmTotalPerdidas.textContent = NUM.format(lostLeads);
+  if (refs.crmTaxaPerda) refs.crmTaxaPerda.textContent = `${taxaPerda.toFixed(1).replace(".", ",")}%`;
+  if (refs.crmTopLossReason) refs.crmTopLossReason.textContent = topLossReasonLabel;
 
   const stageCount = {
-    Lead: totalLeads,
-    Proposta: totalPropostas,
+    Lead: leads.filter((lead) => getLeadStage(lead, vendasRows) === "Lead").length,
+    Proposta: leads.filter((lead) => getLeadStage(lead, vendasRows) === "Proposta").length,
     Venda: totalVendas,
+    Perdida: lostLeads,
   };
-  const maxVal = Math.max(1, stageCount.Lead, stageCount.Proposta, stageCount.Venda);
+  const maxVal = Math.max(1, stageCount.Lead, stageCount.Proposta, stageCount.Venda, stageCount.Perdida);
   refs.crmStageBars.innerHTML = "";
-  ["Lead", "Proposta", "Venda"].forEach((stage) => {
+  ["Lead", "Proposta", "Venda", "Perdida"].forEach((stage) => {
     const row = document.createElement("div");
     row.className = "crm-stage-row";
     const label = document.createElement("span");
@@ -3049,6 +3071,7 @@ function renderCrmOverview(leads, vendasRows) {
     track.className = "crm-stage-track";
     const fill = document.createElement("div");
     fill.className = "crm-stage-fill";
+    if (stage === "Perdida") fill.classList.add("crm-stage-fill-loss");
     fill.style.width = `${(stageCount[stage] / maxVal) * 100}%`;
     track.appendChild(fill);
     const value = document.createElement("span");
