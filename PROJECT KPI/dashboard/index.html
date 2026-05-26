@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard KPI Comercial - ElevaLife</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Montserrat+Alternates:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="brand-wrap">
+        <img src="./assets/logo-elevalife.png" alt="ElevaLife" class="brand-logo" />
+        <div>
+          <h1>Dashboard Comercial</h1>
+          <p id="updatedAt">Carregando dados...</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button type="button" class="tab-btn active" data-tab="painel">Painel de Vendas</button>
+        <button type="button" class="tab-btn" data-tab="input">CRM</button>
+      </div>
+    </header>
+
+    <main id="tab-painel" class="tab-content active">
+      <div class="painel-layout filters-open" id="painelLayout">
+        <aside class="filters-sidebar card" id="filtersSidebar">
+          <div class="section-head">
+            <h2>Filtros</h2>
+            <button id="toggleFilters" type="button" class="ghost-btn">-</button>
+          </div>
+
+          <div class="actions-inline top-gap">
+            <button id="btnRefreshData" type="button">Atualizar Tudo</button>
+            <button id="clearFilters" type="button">Limpar filtros</button>
+            <button id="btnExportExcel" type="button" title="Baixar Excel">
+              <span class="dl-arrow">↓</span><span class="file-badge excel">XLS</span>
+            </button>
+            <button id="btnExportPdf" type="button" title="Baixar PDF">
+              <span class="dl-arrow">↓</span><span class="file-badge pdf">PDF</span>
+            </button>
+          </div>
+
+          <div class="filter-groups">
+            <div>
+              <h3>Ano</h3>
+              <div id="chipsAno" class="chips"></div>
+            </div>
+            <div>
+              <h3>Quarter</h3>
+              <div id="chipsQuarter" class="chips"></div>
+            </div>
+            <div>
+              <h3>Mês da Venda</h3>
+              <div id="chipsMes" class="chips"></div>
+            </div>
+            <div>
+              <h3>Origem (Sócio)</h3>
+              <div id="chipsOrigem" class="chips"></div>
+            </div>
+            <div>
+              <h3>Entrada (Canais)</h3>
+              <button id="entradaDropdownBtn" class="filter-dropdown-btn" type="button">Selecionar entrada(s)</button>
+              <div id="entradaDropdown" class="filter-dropdown" hidden></div>
+            </div>
+            <div>
+              <h3>Serviço</h3>
+              <button id="servicoDropdownBtn" class="filter-dropdown-btn" type="button">Selecionar serviço(s)</button>
+              <div id="servicoDropdown" class="filter-dropdown" hidden></div>
+            </div>
+            <div>
+              <h3>Tipo</h3>
+              <div id="chipsTipo" class="chips"></div>
+            </div>
+          </div>
+
+        </aside>
+
+        <section class="dashboard-main">
+          <section class="kpi-grid">
+            <article class="kpi card">
+              <h3>Vendas Fechadas</h3>
+              <p id="kpiCount">-</p>
+            </article>
+            <article class="kpi card">
+              <h3>Valor Vendido</h3>
+              <p id="kpiValue">-</p>
+            </article>
+            <article class="kpi card">
+              <h3>Ticket Médio</h3>
+              <p id="kpiTicket">-</p>
+            </article>
+            <article class="kpi card">
+              <h3>% Recorrente (R)</h3>
+              <p id="kpiRecurring">-</p>
+            </article>
+          </section>
+          <section class="funnel-top-grid">
+            <article class="card funnel-top-card">
+              <h2>Funil Comercial (Leads → Propostas → Vendas)</h2>
+              <div id="chartFunilComercial" class="chart"></div>
+            </article>
+          </section>
+          <section class="meta-top-grid">
+            <article class="meta-gauge-top card">
+              <h2>Meta (%)</h2>
+              <div id="chartMetaGauge" class="chart"></div>
+            </article>
+            <article class="meta-gauge-top card">
+              <h2>Meta x Realizado (R$)</h2>
+              <div id="chartMetaCompare" class="chart"></div>
+            </article>
+          </section>
+          <div class="section-head">
+            <h2>Analytics Avançado (Opcional)</h2>
+            <button id="toggleAdvancedAnalytics" type="button" class="ghost-btn">Ocultar</button>
+          </div>
+          <section class="advanced-grid" id="advancedAnalyticsSection">
+            <article class="advanced-kpi card">
+              <h3>Conversão Lead → Proposta</h3>
+              <p id="aiLeadToProp">-</p>
+              <small class="kpi-note">Percentual de leads que viraram propostas enviadas.</small>
+            </article>
+            <article class="advanced-kpi card">
+              <h3>Conversão Proposta → Venda</h3>
+              <p id="aiPropToSale">-</p>
+              <small class="kpi-note">Percentual de propostas enviadas que fecharam em venda.</small>
+            </article>
+            <article class="advanced-kpi card">
+              <h3>Taxa de Ganho (R$)</h3>
+              <p id="aiWinRate">-</p>
+              <small class="kpi-note">Relação entre valor vendido e valor total proposto.</small>
+            </article>
+            <article class="advanced-kpi card">
+              <h3>Previsão Próximo Mês</h3>
+              <p id="aiForecast">-</p>
+              <small class="kpi-note">Estimativa de vendas com base na tendência histórica.</small>
+            </article>
+            <article class="advanced-kpi card">
+              <h3>Pontos Fora do Padrão</h3>
+              <p id="aiAnomalies">-</p>
+              <small class="kpi-note">Meses com resultado acima ou abaixo do comportamento esperado.</small>
+            </article>
+          </section>
+
+          <section class="charts-grid">
+            <article class="card span-2">
+              <h2>Acumulado de Vendas (Meta Prevista x Meta Atingida)</h2>
+              <div id="chartAcumuladoMeta" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Conversão por Responsável</h2>
+              <div id="chartConvResponsavel" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Conversão por Canal</h2>
+              <div id="chartConvCanal" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Vendas</h2>
+              <div id="chartVendas" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Vendas por Serviço</h2>
+              <div id="chartVendasServico" class="chart"></div>
+            </article>
+                        <article class="card span-2">
+              <h2>Mapa de Vendas por Local</h2>
+              <div id="chartMapaVendas" class="chart"></div>
+            </article>
+
+            <article class="card">
+              <h2>Entradas de Leads (Canais)</h2>
+              <div id="chartLeadEntradas" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Propostas Enviadas</h2>
+              <div id="chartPropEnviadas" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Divisão de Envio das Propostas (Semana)</h2>
+              <div id="chartPropSemana" class="chart"></div>
+            </article>
+            <article class="card">
+              <h2>Volume (R$) de Envio de Propostas</h2>
+              <div id="chartPropVolume" class="chart"></div>
+            </article>
+          </section>
+          <section class="compact-donuts-grid">
+            <article class="card compact-donut-card">
+              <h2>Vendas Pontual x Recorrente (P x R)</h2>
+              <div id="chartVendasTipo" class="chart"></div>
+            </article>
+            <article class="card compact-donut-card">
+              <h2>Vendas por Origem (Sócio x Não Sócio)</h2>
+              <div id="chartVendasSocio" class="chart"></div>
+            </article>
+            <article class="card compact-donut-card">
+              <h2>Propostas Enviadas (S x N)</h2>
+              <div id="chartPropSN" class="chart"></div>
+            </article>
+            <article class="card compact-donut-card">
+              <h2>Classificação ICP dos Leads</h2>
+              <div id="chartLeadIcp" class="chart"></div>
+            </article>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <main id="tab-input" class="tab-content">
+      <section class="card">
+        <h2>Upload de Planilha (sem substituir o original)</h2>
+        <p class="hint">Aceita .xlsx, .csv e .json. Se a planilha tiver aba <code>VENDAS</code>, ela será priorizada.</p>
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.json" />
+        <div class="actions-inline top-gap">
+          <button id="btnUseOriginal" type="button">Usar base original</button>
+          <button id="btnUseCustom" type="button">Usar base editada</button>
+          <button id="btnClearCustom" type="button">Limpar base editada</button>
+        </div>
+        <p id="dataModeInfo" class="hint"></p>
+      </section>
+
+      <section class="card">
+        <h2>Cadastro de Lead e Proposta (Etapa 1)</h2>
+        <form id="leadForm" class="form-grid">
+          <label>Data Lead <input name="Data" type="date" lang="pt-BR" required /></label>
+          <label>Nome do Lead
+            <input id="leadNomeInput" name="Nome" type="text" list="leadNomeList" required />
+            <small id="leadNomeHint" class="hint inline-hint"></small>
+          </label>
+          <label>Empresa
+            <input id="leadEmpresaInput" name="Empresa" type="text" list="leadEmpresaList" required />
+            <small id="leadEmpresaHint" class="hint inline-hint"></small>
+          </label>
+          <label>E-mail <input name="Email" type="email" placeholder="contato@empresa.com" /></label>
+          <label>Telefone (WhatsApp) <input name="Telefone" type="text" placeholder="5511999999999" /></label>
+          <label>Cargo <input name="Cargo" type="text" placeholder="Ex.: Comprador, RH, Diretor" /></label>
+          <label>Unidade <input name="Unidade" type="text" placeholder="Ex.: Mogi das Cruzes" /></label>
+          <label>Canal (Entrada) <input id="leadCanalInput" name="Canal" type="text" list="leadCanalList" placeholder="Ex.: Indicação, Site, WhatsApp" required /></label>
+          <label>Responsável <input id="leadResponsavelInput" name="Entrada" type="text" list="leadResponsavelList" placeholder="Quem atendeu" /></label>
+          <label>Campanha <input id="leadCampanhaInput" name="Campanha" type="text" list="leadCampanhaList" /></label>
+          <label>Classificação ICP <select name="Classificação"><option>A</option><option>B</option><option>C</option></select></label>
+          <label class="service-picker">Serviço
+            <input id="leadServiceInput" name="Serviços" type="text" hidden />
+            <button id="leadServiceBtn" class="service-dropdown-btn" type="button">Selecionar serviço(s)</button>
+            <div id="leadServiceDropdown" class="service-dropdown" hidden>
+              <input id="leadServiceSearch" class="filter-dropdown-search" type="search" placeholder="Buscar serviço..." />
+              <div id="leadServiceOptions"></div>
+              <div class="top-gap">
+                <input id="leadServiceNew" type="text" placeholder="Incluir novo serviço" />
+                <button id="leadServiceAdd" type="button" class="ghost-btn top-gap">Adicionar novo</button>
+              </div>
+            </div>
+          </label>
+          <label>Tipo <select name="TIPO"><option>P</option><option>R</option></select></label>
+          <label id="recurringMonthsWrap" hidden>Meses de recorrência
+            <input id="recurringMonths" name="Meses Recorrência" type="number" min="1" step="1" />
+          </label>
+          <label id="recurringMonthlyValueWrap" hidden>Valor mensal (R$)
+            <input id="recurringMonthlyValue" name="Valor Mensal Recorrente" type="number" step="0.01" min="0" />
+          </label>
+          <label id="recurringTotalWrap" hidden>Valor final da proposta (R$)
+            <input id="recurringTotal" type="text" readonly />
+          </label>
+          <label>Proposta Enviada? <select name="Proposta Enviada ?"><option>S</option><option>N</option></select></label>
+          <label>Valor Proposta (R$) <input name="Valor Proposta" type="number" step="0.01" /></label>
+          <label>Data de envio <input name="Data de envio" type="date" lang="pt-BR" /></label>
+          <button id="leadFormSubmit" type="submit">Salvar Lead/Proposta</button>
+          <button id="cancelLeadEdit" type="button" class="ghost-btn" hidden>Cancelar Edição</button>
+        </form>
+        <datalist id="leadEmpresaList"></datalist>
+        <datalist id="leadNomeList"></datalist>
+        <datalist id="leadCanalList"></datalist>
+        <datalist id="leadResponsavelList"></datalist>
+        <datalist id="leadCampanhaList"></datalist>
+      </section>
+
+      <section class="card">
+        <h2>Visão CRM</h2>
+        <div class="crm-kpi-grid">
+          <article class="crm-kpi">
+            <h3>Total de Leads</h3>
+            <p id="crmTotalLeads">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Propostas Enviadas</h3>
+            <p id="crmTotalPropostas">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Vendas Confirmadas</h3>
+            <p id="crmTotalVendas">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Conversão (%)</h3>
+            <p id="crmTaxaConversao">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Valor em Propostas</h3>
+            <p id="crmValorPropostas">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Valor em Vendas</h3>
+            <p id="crmValorVendas">-</p>
+          </article>
+        </div>
+        <div id="crmStageBars" class="crm-stage-bars top-gap"></div>
+      </section>
+
+      <div class="crm-workspace" id="crmWorkspace">
+        <section class="card crm-kanban-card" id="crmKanbanCard">
+          <div class="section-head">
+            <h2>Kanban Comercial</h2>
+            <div class="actions-inline">
+              <button id="toggleKanbanVisibility" type="button" class="ghost-btn">Ocultar Kanban</button>
+              <button id="toggleKanbanCompact" type="button" class="ghost-btn">Modo Compacto</button>
+            </div>
+          </div>
+          <p class="hint">Arraste os cards entre os buckets. Ao soltar, o status é atualizado e o histórico da etapa é registrado automaticamente.</p>
+          <div class="actions-inline">
+            <button id="enableTaskNotifications" type="button" class="ghost-btn">Ativar alertas desktop</button>
+            <span id="taskNotificationStatus" class="hint">Alertas de tarefa: desativados</span>
+          </div>
+          <div id="crmKanban" class="kanban-board compact"></div>
+        </section>
+
+        <section class="card crm-leads-card" id="crmLeadsCard">
+          <h2>Leads Cadastrados (Base Editada)</h2>
+          <p class="hint">Clique no lead para abrir o detalhamento e registrar venda/desconto.</p>
+          <div class="details-controls">
+            <label>
+              Buscar
+              <input id="leadSearch" type="search" placeholder="Nome, empresa, canal ou serviço" />
+            </label>
+            <label>
+              Etapa
+              <select id="leadStageFilter">
+                <option value="TODOS">Todos</option>
+                <option value="Lead">Lead</option>
+                <option value="Proposta">Proposta</option>
+                <option value="Venda">Venda</option>
+              </select>
+            </label>
+            <label>
+              Itens por página
+              <select id="leadPageSize">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+            <div class="details-pager">
+              <button id="leadPrevPage" type="button" class="ghost-btn">Anterior</button>
+              <span id="leadPageInfo">Página 1 de 1</span>
+              <button id="leadNextPage" type="button" class="ghost-btn">Próxima</button>
+            </div>
+          </div>
+          <div class="table-wrap crm-leads-table-wrap">
+            <table id="leadTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" id="customPreviewSection" hidden>
+        <h2>Prévia da Base Editada</h2>
+        <div class="table-wrap">
+          <table id="customTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <aside id="detailsPanel" class="details-panel" aria-hidden="true">
+      <div class="details-header">
+        <h2 id="detailsTitle">Detalhamento</h2>
+        <button id="closeDetails" type="button">Fechar</button>
+      </div>
+      <div id="detailsMeta" class="details-meta"></div>
+      <div class="details-controls">
+        <label>
+          Itens por página
+          <select id="detailsPageSize">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="details-pager">
+          <button id="detailsPrevPage" type="button" class="ghost-btn">Anterior</button>
+          <span id="detailsPageInfo">Página 1 de 1</span>
+          <button id="detailsNextPage" type="button" class="ghost-btn">Próxima</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="detailsTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </aside>
+
+    <div id="overlay" class="overlay" hidden></div>
+
+    <div id="leadModalOverlay" class="overlay" hidden></div>
+    <aside id="leadModal" class="details-panel lead-modal" aria-hidden="true">
+      <div class="details-header">
+        <h2>Detalhamento do Lead</h2>
+        <button id="closeLeadModal" type="button">Fechar</button>
+      </div>
+      <div id="leadModalMeta" class="details-meta"></div>
+      <section class="modal-section top-gap">
+        <h3>Dados do Lead</h3>
+        <div id="leadDataSnapshot" class="lead-data-grid"></div>
+        <h4>Histórico do Lead</h4>
+        <div id="leadChangeHistory" class="task-history"></div>
+      </section>
+
+      <section class="modal-section top-gap">
+        <h3>Conversão de Venda</h3>
+        <form id="leadModalForm" class="form-grid top-gap">
+          <label>Informar venda?
+            <select id="leadSoldFlag">
+              <option value="N">Não</option>
+              <option value="S">Sim</option>
+            </select>
+          </label>
+          <label>Status da venda
+            <select id="leadSaleStatus">
+              <option value="ATIVA">Ativa</option>
+              <option value="CANCELADA">Cancelada</option>
+            </select>
+          </label>
+          <label>Houve desconto?
+            <select id="leadDiscountFlag">
+              <option value="N">Não</option>
+              <option value="S">Sim</option>
+            </select>
+          </label>
+          <label id="leadNewValueWrap" hidden>Novo valor da venda (R$)
+            <input id="leadNewValue" type="number" step="0.01" min="0" />
+          </label>
+          <label>Data da venda
+            <input id="leadSaleDate" type="date" lang="pt-BR" />
+          </label>
+          <label>Origem da venda
+            <select id="leadSaleSocio">
+              <option value="S">Sócio</option>
+              <option value="N">Não Sócio</option>
+            </select>
+          </label>
+          <label>Observação
+            <input id="leadSaleObs" type="text" placeholder="Observação da conversão" />
+          </label>
+          <button id="saveLeadConversion" type="submit">Salvar Conversão</button>
+        </form>
+      </section>
+
+      <section class="modal-section top-gap">
+        <h3>Tarefas do Lead</h3>
+        <form id="leadTaskForm" class="form-grid top-gap">
+          <label>Tipo de tarefa
+            <select id="taskType" required>
+              <option value="E-mail">E-mail</option>
+              <option value="Reunião">Reunião</option>
+              <option value="Ligação">Ligação</option>
+              <option value="WhatsApp">WhatsApp</option>
+            </select>
+          </label>
+          <label>Responsável
+            <input id="taskOwner" type="text" placeholder="Nome do responsável" required />
+          </label>
+          <label>Prazo
+            <input id="taskDueDate" type="date" lang="pt-BR" required />
+          </label>
+          <label>Status
+            <select id="taskStatus">
+              <option value="Pendente">Pendente</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </label>
+          <label class="task-desc">Descrição
+            <input id="taskDescription" type="text" placeholder="Detalhe da tarefa" />
+          </label>
+          <button id="saveLeadTask" type="submit">Salvar Tarefa</button>
+        </form>
+        <div id="taskSuggestion" class="hint"></div>
+        <div id="leadTaskList" class="task-list top-gap"></div>
+        <h4>Histórico de Tarefas</h4>
+        <div id="leadTaskHistory" class="task-history"></div>
+      </section>
+    </aside>
+  </body>
+</html>

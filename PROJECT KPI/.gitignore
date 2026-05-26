@@ -1,0 +1,12 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local snapshots/backups
+backups/
+*.bak
+*.tmp
+
+# Generated reports
+Relatorio_KPI_Vendas_*.xlsx
+Relatorio_KPI_Vendas_*.pdf
