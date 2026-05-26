@@ -42,6 +42,7 @@ const UNIT_GEO_COORDS = {
 const STORAGE_KEY = "kpi_custom_vendas_v1";
 const STORAGE_KEY_GERAL = "kpi_custom_geral_v1";
 const STORAGE_KEY_CRM_VIEW = "kpi_crm_view_v1";
+const STORAGE_KEY_MODE = "kpi_data_mode_v1";
 const AUTO_CROSSMATCH_LEADS_FRONT = false;
 const MAX_SALE_BEFORE_LEAD_DAYS = 15;
 const HIDDEN_YEARS_FRONT = new Set(["2025"]);
@@ -2594,7 +2595,7 @@ function deleteLead(leadId) {
   }
 
   persistCustomGeral();
-  state.mode = "custom";
+  setDataMode("custom");
   clearFilterSets();
   rebuildChipFilters();
   applyFilters();
@@ -2635,6 +2636,25 @@ function loadCustomGeralFromStorage() {
 
 function persistCrmViewState() {
   localStorage.setItem(STORAGE_KEY_CRM_VIEW, JSON.stringify(state.crmView));
+}
+
+function setDataMode(mode) {
+  const normalized = mode === "custom" ? "custom" : "original";
+  state.mode = normalized;
+  localStorage.setItem(STORAGE_KEY_MODE, normalized);
+}
+
+function loadDataMode() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MODE);
+    if (raw === "custom" || raw === "original") {
+      state.mode = raw;
+      return;
+    }
+  } catch (_) {
+    // noop
+  }
+  state.mode = "original";
 }
 
 function loadCrmViewState() {
@@ -3253,7 +3273,7 @@ function addLeadTask(leadId, payload) {
   pushTaskHistory(lead, "Tarefa criada", task);
   upsertCustomLead(lead);
   persistCustomGeral();
-  state.mode = "custom";
+  setDataMode("custom");
   notifyTask("Nova tarefa criada", `${lead.Empresa} | ${task.tipo} | ${task.responsavel} | ${formatDateBr(task.prazo)}`);
   return { ok: true, task };
 }
@@ -3271,7 +3291,7 @@ function updateTaskStatus(leadId, taskId, status) {
   pushTaskHistory(lead, "Status de tarefa alterado", task, { fromStatus: prev, toStatus: task.status });
   upsertCustomLead(lead);
   persistCustomGeral();
-  state.mode = "custom";
+  setDataMode("custom");
   if (task.status === "Concluída") {
     notifyTask("Tarefa concluída", `${lead.Empresa} | ${task.tipo} concluída por ${task.responsavel} (${formatDateBr(task.prazo)})`);
   }
@@ -3426,7 +3446,7 @@ function updateLeadStage(leadId, targetStage, source = "kanban") {
   recordLeadStageHistory(lead, fromStage, toStage, source);
   upsertCustomLead(lead);
   persistCustomGeral();
-  state.mode = "custom";
+  setDataMode("custom");
   clearFilterSets();
   rebuildChipFilters();
   applyFilters();
@@ -3778,7 +3798,7 @@ function processLeadConversion() {
   const obsRaw = String(refs.leadSaleObs.value || "").trim();
   const persistAndRefresh = () => {
     persistCustomGeral();
-    state.mode = "custom";
+    setDataMode("custom");
     clearFilterSets();
     rebuildChipFilters();
     applyFilters();
@@ -4034,7 +4054,7 @@ async function importFromFile(file) {
 
   state.customVendas = prepareVendasRecords(normalized);
   persistCustom();
-  state.mode = "custom";
+  setDataMode("custom");
   clearFilterSets();
   rebuildChipFilters();
   applyFilters();
@@ -4275,7 +4295,7 @@ function wireEvents() {
   });
 
   refs.btnUseOriginal.addEventListener("click", () => {
-    state.mode = "original";
+    setDataMode("original");
     clearFilterSets();
     rebuildChipFilters();
     applyFilters();
@@ -4286,7 +4306,7 @@ function wireEvents() {
       alert("A base editada está vazia. Faça upload ou cadastre ao menos um lead/proposta no CRM.");
       return;
     }
-    state.mode = "custom";
+    setDataMode("custom");
     clearFilterSets();
     rebuildChipFilters();
     applyFilters();
@@ -4299,7 +4319,7 @@ function wireEvents() {
     localStorage.removeItem(STORAGE_KEY_GERAL);
     refs.leadForm?.reset();
     resetLeadFormEditState();
-    state.mode = "original";
+    setDataMode("original");
     clearFilterSets();
     rebuildChipFilters();
     applyFilters();
@@ -4353,7 +4373,7 @@ function wireEvents() {
     }
 
     persistCustomGeral();
-    state.mode = "custom";
+    setDataMode("custom");
     refs.leadForm.reset();
     resetLeadFormEditState();
     toggleRecurringFields();
@@ -4519,21 +4539,24 @@ async function loadData(options = {}) {
   state.raw.records.geral = prepareGeralRecords(state.raw.records.geral || []);
   const sourceWhen = new Date(state.raw.generatedAt);
   const refreshWhen = new Date();
+
+  loadCustomFromStorage();
+  loadCustomGeralFromStorage();
+  loadDataMode();
+  loadCrmViewState();
+  // Mantém o modo escolhido pelo usuário entre recargas.
+  // Se estiver em custom sem dados customizados, retorna ao original.
+  if (state.mode === "custom" && !state.customVendas.length && !state.customGeral.length) {
+    setDataMode("original");
+  }
   const modeLabel = state.mode === "custom" ? "Base combinada ativa" : "Base original ativa";
   refs.updatedAt.textContent = showSuccessMessage
     ? `Dados atualizados em ${refreshWhen.toLocaleString("pt-BR")} | Fonte: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`
     : `Base atualizada em: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`;
-
-  loadCustomFromStorage();
-  loadCustomGeralFromStorage();
-  loadCrmViewState();
   const reconciliationChanges = reconcileLeadsFromSalesBase();
   if (reconciliationChanges > 0) {
     refs.updatedAt.textContent += ` | Reconciliação automática: ${reconciliationChanges} ajuste(s)`;
   }
-  // Mantém base original como padrão ao iniciar, mesmo se existir base custom em cache local.
-  // Isso evita exibir dados antigos "travados" sem o usuário perceber.
-  state.mode = "original";
   // Evita filtros "presos" entre atualizações de base.
   clearFilterSets();
   updateTaskNotificationStatus();
@@ -4548,7 +4571,7 @@ async function loadData(options = {}) {
 
 wireEvents();
 setAdvancedAnalyticsVisible(false);
-loadData().catch((error) => {
+loadData({ forceRefresh: true }).catch((error) => {
   refs.updatedAt.textContent = `Erro ao carregar dados: ${error.message}`;
   console.error(error);
 });
