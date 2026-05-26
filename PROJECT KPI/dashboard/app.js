@@ -1012,6 +1012,93 @@ function groupCount(records, key) {
   return [...map.entries()].map(([label, value]) => ({ label, value }));
 }
 
+function normalizeLookupText(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function getRowComparableDate(row) {
+  return String(
+    row?.["Data da venda"]
+    || row?.["Data de envio"]
+    || row?.Data
+    || ""
+  ).slice(0, 10);
+}
+
+function dateDiffDays(a, b) {
+  const da = toDateOrNull(a);
+  const db = toDateOrNull(b);
+  if (!da || !db) return null;
+  return Math.abs((da.getTime() - db.getTime()) / 86400000);
+}
+
+function scoreDetailRowLeadMatch(row, lead, vendasAll) {
+  const rowCompany = normalizeLookupText(row?.Empresa || row?.Cliente);
+  const rowService = normalizeLookupText(row?.["Serviço"]);
+  const rowUnit = normalizeLookupText(row?.Unidade);
+  const rowName = normalizeLookupText(row?.Nome);
+  const rowDate = getRowComparableDate(row);
+  const rowMatchId = saleMatchId(row);
+
+  const leadCompany = normalizeLookupText(lead?.Empresa);
+  const leadService = normalizeLookupText(lead?.["Serviço"]);
+  const leadUnit = normalizeLookupText(lead?.Unidade);
+  const leadName = normalizeLookupText(lead?.Nome);
+  const leadDate = getRowComparableDate(lead);
+  const leadMatchId = String(lead?.["Venda Match Id"] || "");
+
+  let score = 0;
+  if (rowCompany && rowCompany === leadCompany) score += 50;
+  if (rowService && rowService === leadService) score += 40;
+  if (rowUnit && leadUnit && rowUnit === leadUnit) score += 15;
+  if (rowName && leadName && rowName === leadName) score += 20;
+
+  if (rowMatchId && rowMatchId === leadMatchId) score += 90;
+  if (rowMatchId) {
+    const related = getRelatedSalesForLead(lead, vendasAll, { mode: "all_matches" });
+    const hasExactRelated = related.some((sale) => saleMatchId(sale) === rowMatchId);
+    if (hasExactRelated) score += 70;
+  }
+
+  const diff = dateDiffDays(rowDate, leadDate);
+  if (diff !== null && diff <= 60) score += Math.max(1, Math.round((60 - diff) / 6));
+  return score;
+}
+
+function resolveLeadIdForDetailRow(row) {
+  const leads = getEditableLeads();
+  if (!leads.length) return "";
+
+  const explicitLeadId = String(row?.LeadId || "").trim();
+  if (explicitLeadId && leads.some((lead) => lead.LeadId === explicitLeadId)) return explicitLeadId;
+
+  const rowCompany = normalizeLookupText(row?.Empresa || row?.Cliente);
+  const rowService = normalizeLookupText(row?.["Serviço"]);
+  const rowName = normalizeLookupText(row?.Nome);
+  const hasLookupFields = rowCompany || rowService || rowName;
+  if (!hasLookupFields) return "";
+
+  const vendasAll = getMergedVendasRaw();
+  let bestLeadId = "";
+  let bestScore = -1;
+  let secondBest = -1;
+
+  for (const lead of leads) {
+    const score = scoreDetailRowLeadMatch(row, lead, vendasAll);
+    if (score > bestScore) {
+      secondBest = bestScore;
+      bestScore = score;
+      bestLeadId = lead.LeadId;
+    } else if (score > secondBest) {
+      secondBest = score;
+    }
+  }
+
+  if (bestScore < 70) return "";
+  if (secondBest >= 0 && bestScore - secondBest < 10) return "";
+  return bestLeadId;
+}
+
 function openDetails(title, meta, rows, columns) {
   state.detailsView.title = title;
   state.detailsView.meta = meta;
@@ -1095,6 +1182,9 @@ function renderDetailsTable() {
     });
     headerRow.appendChild(th);
   }
+  const thAction = document.createElement("th");
+  thAction.textContent = "Ações";
+  headerRow.appendChild(thAction);
   thead.appendChild(headerRow);
 
   for (const row of pageRows) {
@@ -1119,6 +1209,25 @@ function renderDetailsTable() {
       }
       tr.appendChild(td);
     }
+
+    const tdAction = document.createElement("td");
+    tdAction.className = "details-actions-cell";
+    const leadId = resolveLeadIdForDetailRow(row);
+    if (leadId) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ghost-btn action-btn";
+      btn.textContent = "Editar lead";
+      btn.addEventListener("click", () => {
+        closeDetails();
+        openLeadConversionModal(leadId);
+      });
+      tdAction.appendChild(btn);
+    } else {
+      tdAction.textContent = "-";
+    }
+    tr.appendChild(tdAction);
+
     tbody.appendChild(tr);
   }
 
