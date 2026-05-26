@@ -327,6 +327,14 @@
             <h3>Top Motivo de Perda</h3>
             <p id="crmTopLossReason">-</p>
           </article>
+          <article class="crm-kpi">
+            <h3>Tarefas Vencidas</h3>
+            <p id="crmTasksOverdue">-</p>
+          </article>
+          <article class="crm-kpi">
+            <h3>Tarefas para Hoje</h3>
+            <p id="crmTasksToday">-</p>
+          </article>
         </div>
         <div id="crmStageBars" class="crm-stage-bars top-gap"></div>
       </section>
@@ -343,6 +351,7 @@
           <p class="hint">Arraste os cards entre os buckets. Ao soltar, o status é atualizado e o histórico da etapa é registrado automaticamente.</p>
           <div class="actions-inline">
             <button id="enableTaskNotifications" type="button" class="ghost-btn">Ativar alertas desktop</button>
+            <button id="btnTaskDigestEmail" type="button" class="ghost-btn">Resumo por E-mail</button>
             <span id="taskNotificationStatus" class="hint">Alertas de tarefa: desativados</span>
           </div>
           <div id="crmKanban" class="kanban-board compact"></div>
@@ -489,6 +498,22 @@
           </label>
           <label id="leadNewValueWrap" hidden>Novo valor da venda (R$)
             <input id="leadNewValue" type="number" step="0.01" min="0" />
+          </label>
+          <label id="leadWorkStartDateWrap" hidden>Previsão de início dos trabalhos
+            <input id="leadWorkStartDate" type="date" lang="pt-BR" />
+          </label>
+          <label id="leadPaymentTermWrap" hidden>Prazo de pagamento (dias)
+            <input id="leadPaymentTermDays" type="number" min="0" step="1" placeholder="Ex.: 30" />
+          </label>
+          <label id="leadPaymentDueDateWrap" hidden>Data prevista de pagamento
+            <input id="leadPaymentDueDate" type="date" lang="pt-BR" />
+          </label>
+          <label id="leadFinanceStatusWrap" hidden>Status financeiro inicial
+            <select id="leadFinanceStatus">
+              <option value="A faturar">A faturar</option>
+              <option value="Faturado">Faturado</option>
+              <option value="Recebido">Recebido</option>
+            </select>
           </label>
           <label>Data da venda
             <input id="leadSaleDate" type="date" lang="pt-BR" />

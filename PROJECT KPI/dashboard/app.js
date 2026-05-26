@@ -234,6 +234,14 @@ const refs = {
   leadLossReason: document.getElementById("leadLossReason"),
   leadNewValueWrap: document.getElementById("leadNewValueWrap"),
   leadNewValue: document.getElementById("leadNewValue"),
+  leadWorkStartDateWrap: document.getElementById("leadWorkStartDateWrap"),
+  leadWorkStartDate: document.getElementById("leadWorkStartDate"),
+  leadPaymentTermWrap: document.getElementById("leadPaymentTermWrap"),
+  leadPaymentTermDays: document.getElementById("leadPaymentTermDays"),
+  leadPaymentDueDateWrap: document.getElementById("leadPaymentDueDateWrap"),
+  leadPaymentDueDate: document.getElementById("leadPaymentDueDate"),
+  leadFinanceStatusWrap: document.getElementById("leadFinanceStatusWrap"),
+  leadFinanceStatus: document.getElementById("leadFinanceStatus"),
   leadSaleDate: document.getElementById("leadSaleDate"),
   leadSaleSocio: document.getElementById("leadSaleSocio"),
   leadSaleObs: document.getElementById("leadSaleObs"),
@@ -262,6 +270,8 @@ const refs = {
   crmTotalPerdidas: document.getElementById("crmTotalPerdidas"),
   crmTaxaPerda: document.getElementById("crmTaxaPerda"),
   crmTopLossReason: document.getElementById("crmTopLossReason"),
+  crmTasksOverdue: document.getElementById("crmTasksOverdue"),
+  crmTasksToday: document.getElementById("crmTasksToday"),
   crmStageBars: document.getElementById("crmStageBars"),
   crmKanban: document.getElementById("crmKanban"),
   crmWorkspace: document.getElementById("crmWorkspace"),
@@ -269,6 +279,7 @@ const refs = {
   toggleKanbanVisibility: document.getElementById("toggleKanbanVisibility"),
   toggleKanbanCompact: document.getElementById("toggleKanbanCompact"),
   enableTaskNotifications: document.getElementById("enableTaskNotifications"),
+  btnTaskDigestEmail: document.getElementById("btnTaskDigestEmail"),
   taskNotificationStatus: document.getElementById("taskNotificationStatus"),
   customPreviewSection: document.getElementById("customPreviewSection"),
   customTable: document.getElementById("customTable"),
@@ -609,6 +620,65 @@ function notifyTask(title, body, key = "") {
   if (key && state.notifiedTaskKeys.has(key)) return;
   new Notification(title, { body });
   if (key) state.notifiedTaskKeys.add(key);
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isTaskOpenStatus(status) {
+  return !["Concluída", "Cancelada"].includes(normalizeTaskStatus(status));
+}
+
+function isTaskOverdue(task, today = todayIso()) {
+  const due = String(task?.prazo || "").slice(0, 10);
+  if (!due) return false;
+  if (!isTaskOpenStatus(task?.status)) return false;
+  return due < today;
+}
+
+function computeTaskMetrics(leads) {
+  const today = todayIso();
+  let overdue = 0;
+  let dueToday = 0;
+  const overdueRows = [];
+  for (const lead of leads || []) {
+    const tasks = Array.isArray(lead.Tarefas) ? lead.Tarefas : [];
+    for (const task of tasks) {
+      const due = String(task?.prazo || "").slice(0, 10);
+      if (!due || !isTaskOpenStatus(task?.status)) continue;
+      if (due < today) {
+        overdue += 1;
+        overdueRows.push({ lead, task, due });
+      } else if (due === today) {
+        dueToday += 1;
+      }
+    }
+  }
+  overdueRows.sort((a, b) => String(a.due).localeCompare(String(b.due), "pt-BR"));
+  return { overdue, dueToday, overdueRows };
+}
+
+function openTaskDigestEmail(leads) {
+  const metrics = computeTaskMetrics(leads);
+  if (!metrics.overdueRows.length) {
+    alert("Sem tarefas vencidas para enviar no resumo.");
+    return;
+  }
+  const lines = metrics.overdueRows.slice(0, 40).map(({ lead, task, due }) =>
+    `- ${lead.Empresa} | ${task.tipo} | Resp.: ${task.responsavel} | Prazo: ${formatDateBr(due)}${task.descricao ? ` | ${task.descricao}` : ""}`
+  );
+  const subject = `Resumo CRM - Tarefas vencidas (${metrics.overdue})`;
+  const body = [
+    `Data: ${new Date().toLocaleString("pt-BR")}`,
+    `Tarefas vencidas: ${metrics.overdue}`,
+    `Tarefas para hoje: ${metrics.dueToday}`,
+    "",
+    "Detalhamento:",
+    ...lines,
+  ].join("\n");
+  const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
 }
 
 function remindDueTasks(leads) {
@@ -2366,6 +2436,10 @@ const KEY_ALIASES = {
   Ano: ["ANO", "YEAR"],
   Quarter: ["QUARTER", "TRIMESTRE"],
   Origem: ["ORIGEM"],
+  "Previsão Início Trabalhos": ["PREVISAOINICIOTRABALHOS", "DATAINICIOTRABALHOS", "DATAINICIO"],
+  "Prazo Pagamento (dias)": ["PRAZOPAGAMENTODIAS", "PRAZOPAGAMENTO", "PRAZODIAS"],
+  "Data Prevista Pagamento": ["DATAPREVISTAPAGAMENTO", "DATAPAGAMENTOPREVISTA"],
+  "Status Financeiro": ["STATUSFINANCEIRO", "STATUSPAGAMENTO"],
 };
 
 function pickByAliases(row, aliases) {
@@ -2401,6 +2475,10 @@ function normalizeVendaRecord(row) {
   normalized.Canal = normalizeChannelName(normalized.Entrada || normalized.Canal || "");
   normalized.Origem = normalizeOrigemValue(normalized.Origem || row.ORIGEM || normalized["Sócio?"]);
   normalized["Sócio?"] = origemToSocioFlag(normalized.Origem);
+  normalized["Previsão Início Trabalhos"] = String(normalized["Previsão Início Trabalhos"] || row["Previsão Início Trabalhos"] || "").slice(0, 10);
+  normalized["Prazo Pagamento (dias)"] = Math.max(0, Math.floor(toNumber(normalized["Prazo Pagamento (dias)"] || row["Prazo Pagamento (dias)"] || 0)));
+  normalized["Data Prevista Pagamento"] = String(normalized["Data Prevista Pagamento"] || row["Data Prevista Pagamento"] || "").slice(0, 10);
+  normalized["Status Financeiro"] = String(normalized["Status Financeiro"] || row["Status Financeiro"] || "").trim();
 
   if (normalized.Tipo === "R" && normalized["Valor Serviço"] > 0 && normalized["Meses Recorrência"] > 0) {
     normalized.Valor = normalized["Valor Serviço"] * normalized["Meses Recorrência"];
@@ -2467,6 +2545,25 @@ function normalizeLeadRecord(row) {
   const valorMensalRecorrente = toNumber(row["Valor Mensal Recorrente"] || row["Valor Serviço"] || 0);
   const dataEnvio = String(row["Data de envio"] || "").slice(0, 10);
   const dataVenda = String(row["Data da venda"] || row["Data Venda"] || "").slice(0, 10);
+  const previsaoInicio = String(
+    row["Previsão Início Trabalhos"]
+    || row["Previsao Inicio Trabalhos"]
+    || row["Data Início Trabalhos"]
+    || row["Data Inicio Trabalhos"]
+    || ""
+  ).slice(0, 10);
+  const prazoPagamentoDias = Math.max(0, Math.floor(toNumber(
+    row["Prazo Pagamento (dias)"]
+    || row["Prazo Pagamento"]
+    || row["Prazo de pagamento"]
+    || 0
+  )));
+  const dataPrevistaPagamento = String(
+    row["Data Prevista Pagamento"]
+    || row["Data de Pagamento Prevista"]
+    || ""
+  ).slice(0, 10);
+  const statusFinanceiro = String(row["Status Financeiro"] || "A faturar").trim() || "A faturar";
   const mes = normalizeMonth(row["Mês"] || monthFromDate(data));
   const ano = String(row.Ano || yearFromDate(data) || new Date().getFullYear());
   const quarter = String(row.Quarter || quarterFromMonthAbbrev(mes));
@@ -2509,6 +2606,10 @@ function normalizeLeadRecord(row) {
     TIPO: tipo,
     "Data de envio": dataEnvio || data,
     "Data da venda": dataVenda,
+    "Previsão Início Trabalhos": previsaoInicio,
+    "Prazo Pagamento (dias)": prazoPagamentoDias,
+    "Data Prevista Pagamento": dataPrevistaPagamento,
+    "Status Financeiro": statusFinanceiro,
     "Mês": mes,
     Ano: ano,
     Quarter: quarter,
@@ -3042,6 +3143,7 @@ function renderCrmOverview(leads, vendasRows) {
   }
   const topLossReasonEntry = [...lossReasonMap.entries()].sort((a, b) => b[1] - a[1])[0] || null;
   const topLossReasonLabel = topLossReasonEntry ? `${topLossReasonEntry[0]} (${topLossReasonEntry[1]})` : "-";
+  const taskMetrics = computeTaskMetrics(leads);
 
   refs.crmTotalLeads.textContent = NUM.format(totalLeads);
   refs.crmTotalPropostas.textContent = NUM.format(totalPropostas);
@@ -3052,6 +3154,8 @@ function renderCrmOverview(leads, vendasRows) {
   if (refs.crmTotalPerdidas) refs.crmTotalPerdidas.textContent = NUM.format(lostLeads);
   if (refs.crmTaxaPerda) refs.crmTaxaPerda.textContent = `${taxaPerda.toFixed(1).replace(".", ",")}%`;
   if (refs.crmTopLossReason) refs.crmTopLossReason.textContent = topLossReasonLabel;
+  if (refs.crmTasksOverdue) refs.crmTasksOverdue.textContent = NUM.format(taskMetrics.overdue);
+  if (refs.crmTasksToday) refs.crmTasksToday.textContent = NUM.format(taskMetrics.dueToday);
 
   const stageCount = {
     Lead: leads.filter((lead) => getLeadStage(lead, vendasRows) === "Lead").length,
@@ -3166,13 +3270,15 @@ function renderLeadTasks(lead) {
   for (const task of tasks) {
     const card = document.createElement("article");
     card.className = "task-card";
+    const overdue = isTaskOverdue(task);
+    if (overdue) card.classList.add("overdue");
     const top = document.createElement("div");
     top.className = "task-card-top";
     const title = document.createElement("strong");
     title.textContent = `${task.tipo} • ${task.responsavel}`;
     const status = document.createElement("span");
     status.className = stageBadgeClass(task.status === "Concluída" ? "Venda" : task.status === "Em andamento" ? "Proposta" : "Lead");
-    status.textContent = task.status;
+    status.textContent = overdue ? "Atrasada" : task.status;
     top.appendChild(title);
     top.appendChild(status);
 
@@ -3231,6 +3337,10 @@ function buildLeadDataSnapshot(lead) {
     ["Tipo", lead.TIPO],
     ["Data de envio", formatDateBr(lead["Data de envio"])],
     ["Data da venda", formatDateBr(lead["Data da venda"])],
+    ["Previsão Início Trabalhos", formatDateBr(lead["Previsão Início Trabalhos"])],
+    ["Prazo Pagamento (dias)", lead["Prazo Pagamento (dias)"]],
+    ["Data Prevista Pagamento", formatDateBr(lead["Data Prevista Pagamento"])],
+    ["Status Financeiro", lead["Status Financeiro"]],
     ["Proposta Enviada?", lead["Proposta Enviada ?"]],
     ["Valor Proposta", BRL.format(toNumber(lead["Valor Proposta"]))],
     ["Valor Venda", BRL.format(toNumber(lead["Valor Venda"]))],
@@ -3357,6 +3467,10 @@ function ensureSaleFromLead(lead) {
     ICP: lead["Classificação"],
     Tipo: lead.TIPO,
     Valor: finalValue,
+    "Previsão Início Trabalhos": lead["Previsão Início Trabalhos"] || "",
+    "Prazo Pagamento (dias)": lead["Prazo Pagamento (dias)"] || 0,
+    "Data Prevista Pagamento": lead["Data Prevista Pagamento"] || "",
+    "Status Financeiro": lead["Status Financeiro"] || "",
     "MÊS VENDA": normalizeMonth(lead["Mês"] || monthFromDate(saleDate)),
   });
   if (!vendaRow) return;
@@ -3485,6 +3599,10 @@ function updateLeadStage(leadId, targetStage, source = "kanban") {
     lead["Data de envio"] = lead["Data de envio"] || new Date().toISOString().slice(0, 10);
     lead["Data da venda"] = lead["Data da venda"] || new Date().toISOString().slice(0, 10);
     if (toNumber(lead["Valor Venda"]) <= 0) lead["Valor Venda"] = toNumber(lead["Valor Proposta"]);
+    lead["Previsão Início Trabalhos"] = lead["Previsão Início Trabalhos"] || lead["Data da venda"];
+    lead["Prazo Pagamento (dias)"] = Math.max(0, Math.floor(toNumber(lead["Prazo Pagamento (dias)"] || 0)));
+    lead["Data Prevista Pagamento"] = lead["Data Prevista Pagamento"] || addDaysToIso(lead["Data da venda"], lead["Prazo Pagamento (dias)"]);
+    lead["Status Financeiro"] = lead["Status Financeiro"] || "A faturar";
     lead["Status Oportunidade"] = "Ganha";
     lead["Motivo Perda"] = "";
     lead["Data da perda"] = "";
@@ -3812,6 +3930,22 @@ function openLeadConversionModal(leadId) {
   refs.leadNewValueWrap.hidden = true;
   refs.leadNewValue.value = "";
   refs.leadSaleDate.value = String(lead["Data da venda"] || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  if (refs.leadWorkStartDate) {
+    refs.leadWorkStartDate.value = String(
+      lead["Previsão Início Trabalhos"]
+      || lead["Data da venda"]
+      || new Date().toISOString().slice(0, 10)
+    ).slice(0, 10);
+  }
+  if (refs.leadPaymentTermDays) {
+    refs.leadPaymentTermDays.value = String(Math.max(0, Math.floor(toNumber(lead["Prazo Pagamento (dias)"] || 0))) || "");
+  }
+  if (refs.leadPaymentDueDate) {
+    refs.leadPaymentDueDate.value = String(lead["Data Prevista Pagamento"] || "").slice(0, 10);
+  }
+  if (refs.leadFinanceStatus) {
+    refs.leadFinanceStatus.value = String(lead["Status Financeiro"] || "A faturar");
+  }
   const relatedAll = getRelatedSalesForLead(lead, getMergedVendasRaw());
   const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale));
   refs.leadSaleStatus.value = hasCancelled && String(lead["Vendido?"] || "").toUpperCase() !== "S" ? "CANCELADA" : "ATIVA";
@@ -3820,11 +3954,29 @@ function openLeadConversionModal(leadId) {
   const lostFlag = String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
   if (refs.leadLossFlag) refs.leadLossFlag.value = lostFlag ? "S" : "N";
   if (refs.leadLossReason) refs.leadLossReason.value = lostFlag ? String(lead["Motivo Perda"] || "") : "";
+  if (refs.leadPaymentDueDate && !refs.leadPaymentDueDate.value) {
+    updatePaymentDueDateFromInputs();
+  }
   toggleSaleFieldsByFlag();
   if (refs.taskSuggestion) refs.taskSuggestion.textContent = "";
   refs.leadModal.classList.add("open");
   refs.leadModal.setAttribute("aria-hidden", "false");
   refs.leadModalOverlay.hidden = false;
+}
+
+function addDaysToIso(isoDate, days) {
+  const base = parseDateInput(isoDate);
+  if (!base || Number.isNaN(base.getTime())) return "";
+  const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+}
+
+function updatePaymentDueDateFromInputs() {
+  if (!refs.leadPaymentDueDate) return;
+  const saleDate = String(refs.leadSaleDate?.value || "");
+  const termDays = Math.max(0, Math.floor(toNumber(refs.leadPaymentTermDays?.value || 0)));
+  if (!saleDate) return;
+  refs.leadPaymentDueDate.value = addDaysToIso(saleDate, termDays);
 }
 
 function toggleSaleFieldsByFlag() {
@@ -3848,6 +4000,10 @@ function toggleSaleFieldsByFlag() {
   }
   refs.leadDiscountFlag.closest("label").hidden = !showDiscount;
   refs.leadNewValueWrap.hidden = !showDiscount || refs.leadDiscountFlag.value !== "S";
+  if (refs.leadWorkStartDateWrap) refs.leadWorkStartDateWrap.hidden = !sold;
+  if (refs.leadPaymentTermWrap) refs.leadPaymentTermWrap.hidden = !sold;
+  if (refs.leadPaymentDueDateWrap) refs.leadPaymentDueDateWrap.hidden = !sold;
+  if (refs.leadFinanceStatusWrap) refs.leadFinanceStatusWrap.hidden = !sold;
   refs.leadSaleDate.closest("label").hidden = !sold && !lost;
   refs.leadSaleStatus.closest("label").hidden = !sold;
   refs.leadSaleSocio.closest("label").hidden = !sold || cancelled;
@@ -3862,6 +4018,10 @@ function processLeadConversion() {
   const lost = refs.leadLossFlag?.value === "S";
   const lossReason = String(refs.leadLossReason?.value || "").trim();
   const saleDate = String(refs.leadSaleDate.value || new Date().toISOString().slice(0, 10));
+  const workStartDate = String(refs.leadWorkStartDate?.value || "").slice(0, 10);
+  const paymentTermDays = Math.max(0, Math.floor(toNumber(refs.leadPaymentTermDays?.value || 0)));
+  const paymentDueDate = String(refs.leadPaymentDueDate?.value || "").slice(0, 10);
+  const financeStatus = String(refs.leadFinanceStatus?.value || "A faturar").trim() || "A faturar";
   const saleStatus = refs.leadSaleStatus.value === "CANCELADA" ? "CANCELADA" : "ATIVA";
   const obsRaw = String(refs.leadSaleObs.value || "").trim();
   const persistAndRefresh = () => {
@@ -3905,6 +4065,10 @@ function processLeadConversion() {
     lead["Vendido?"] = "N";
     lead["Data da venda"] = "";
     lead["Valor Venda"] = 0;
+    lead["Previsão Início Trabalhos"] = "";
+    lead["Prazo Pagamento (dias)"] = 0;
+    lead["Data Prevista Pagamento"] = "";
+    lead["Status Financeiro"] = "";
     lead["Venda Match Id"] = "";
     lead["Histórico Proposta"] = historico;
     lead["Observação Proposta"] = `Perda em ${formatDateBr(saleDate)}: ${lossReason}${obsRaw ? ` | ${obsRaw}` : ""}`;
@@ -3936,6 +4100,10 @@ function processLeadConversion() {
     lead["Vendido?"] = "N";
     lead["Data da venda"] = "";
     lead["Valor Venda"] = 0;
+    lead["Previsão Início Trabalhos"] = "";
+    lead["Prazo Pagamento (dias)"] = 0;
+    lead["Data Prevista Pagamento"] = "";
+    lead["Status Financeiro"] = "";
     lead["Venda Match Id"] = "";
     lead["Status Oportunidade"] = "Aberta";
     lead["Motivo Perda"] = "";
@@ -3961,6 +4129,18 @@ function processLeadConversion() {
       alert("Com desconto = Sim, o novo valor deve ser menor que o valor original da proposta.");
       return;
     }
+  }
+  if (!workStartDate) {
+    alert("Informe a previsão de início dos trabalhos.");
+    return;
+  }
+  if (paymentTermDays < 0) {
+    alert("Prazo de pagamento inválido.");
+    return;
+  }
+  if (!paymentDueDate) {
+    alert("Informe a data prevista de pagamento.");
+    return;
   }
   if (oldValue > 0 && finalValue < oldValue) {
     discountPct = ((oldValue - finalValue) / oldValue) * 100;
@@ -3995,6 +4175,10 @@ function processLeadConversion() {
   lead["Vendido?"] = "S";
   lead["Data da venda"] = saleDate;
   lead["Valor Venda"] = finalValue;
+  lead["Previsão Início Trabalhos"] = workStartDate;
+  lead["Prazo Pagamento (dias)"] = paymentTermDays;
+  lead["Data Prevista Pagamento"] = paymentDueDate;
+  lead["Status Financeiro"] = financeStatus;
   lead["Histórico Proposta"] = historico;
   recordLeadStageHistory(lead, fromStageBefore, "Venda", "modal_conversao");
   upsertCustomLead(lead);
@@ -4010,6 +4194,10 @@ function processLeadConversion() {
     ICP: lead["Classificação"],
     Tipo: lead.TIPO,
     Valor: finalValue,
+    "Previsão Início Trabalhos": workStartDate,
+    "Prazo Pagamento (dias)": paymentTermDays,
+    "Data Prevista Pagamento": paymentDueDate,
+    "Status Financeiro": financeStatus,
     "MÊS VENDA": normalizeMonth(lead["Mês"] || monthFromDate(saleDate)),
   });
   if (vendaRow) {
@@ -4553,6 +4741,10 @@ function wireEvents() {
     const leads = getEditableLeads();
     remindDueTasks(leads);
   });
+  refs.btnTaskDigestEmail?.addEventListener("click", () => {
+    const leads = getEditableLeads();
+    openTaskDigestEmail(leads);
+  });
 
   refs.toggleKanbanVisibility?.addEventListener("click", () => {
     state.crmView.kanbanHidden = !state.crmView.kanbanHidden;
@@ -4579,6 +4771,12 @@ function wireEvents() {
   });
   refs.leadDiscountFlag?.addEventListener("change", () => {
     toggleSaleFieldsByFlag();
+  });
+  refs.leadSaleDate?.addEventListener("change", () => {
+    updatePaymentDueDateFromInputs();
+  });
+  refs.leadPaymentTermDays?.addEventListener("input", () => {
+    updatePaymentDueDateFromInputs();
   });
   refs.leadModalForm?.addEventListener("submit", (event) => {
     event.preventDefault();

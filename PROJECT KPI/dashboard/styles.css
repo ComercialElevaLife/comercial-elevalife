@@ -884,6 +884,11 @@ tbody tr:hover { background: #f2fbfc; }
   padding: 0.35rem 0.45rem;
   background: #fbfefe;
 }
+.task-card.overdue {
+  border-color: #ef9a96;
+  background: #fff5f5;
+  box-shadow: inset 0 0 0 1px rgba(199, 53, 46, 0.08);
+}
 .task-card-top {
   display: flex;
   justify-content: space-between;
