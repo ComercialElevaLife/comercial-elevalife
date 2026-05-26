@@ -228,6 +228,10 @@ const refs = {
   leadSoldFlag: document.getElementById("leadSoldFlag"),
   leadDiscountFlag: document.getElementById("leadDiscountFlag"),
   leadSaleStatus: document.getElementById("leadSaleStatus"),
+  leadLossFlagWrap: document.getElementById("leadLossFlagWrap"),
+  leadLossFlag: document.getElementById("leadLossFlag"),
+  leadLossReasonWrap: document.getElementById("leadLossReasonWrap"),
+  leadLossReason: document.getElementById("leadLossReason"),
   leadNewValueWrap: document.getElementById("leadNewValueWrap"),
   leadNewValue: document.getElementById("leadNewValue"),
   leadSaleDate: document.getElementById("leadSaleDate"),
@@ -2475,6 +2479,11 @@ function normalizeLeadRecord(row) {
   const statusLeadRaw = normalizeLeadStage(row["Status Lead"]);
   const statusManual = normalizeLeadStage(row["Status Manual"]);
   const statusLead = statusLeadRaw || (propostaFlag === "S" ? "Proposta" : "Lead");
+  const soldFlagNormalized = String(row["Vendido?"] || (statusLead === "Venda" ? "S" : "N")).toUpperCase() === "S" ? "S" : "N";
+  const motivoPerda = String(row["Motivo Perda"] || "").trim();
+  const statusOportunidadeRaw = String(row["Status Oportunidade"] || "").trim();
+  const statusOportunidade = statusOportunidadeRaw
+    || (soldFlagNormalized === "S" ? "Ganha" : (motivoPerda ? "Perdida" : "Aberta"));
   return {
     LeadId: leadId,
     Data: data,
@@ -2504,7 +2513,10 @@ function normalizeLeadRecord(row) {
     "Semana Envio": semanaEnvio,
     "Status Lead": statusLead,
     "Status Manual": statusManual,
-    "Vendido?": String(row["Vendido?"] || (statusLead === "Venda" ? "S" : "N")).toUpperCase() === "S" ? "S" : "N",
+    "Status Oportunidade": statusOportunidade,
+    "Motivo Perda": motivoPerda,
+    "Data da perda": String(row["Data da perda"] || "").slice(0, 10),
+    "Vendido?": soldFlagNormalized,
     "Valor Venda": toNumber(row["Valor Venda"] || 0),
     "Histórico Proposta": historico,
     "Histórico Status": Array.isArray(row["Histórico Status"]) ? row["Histórico Status"] : [],
@@ -3200,6 +3212,8 @@ function buildLeadDataSnapshot(lead) {
     ["Valor Proposta", BRL.format(toNumber(lead["Valor Proposta"]))],
     ["Valor Venda", BRL.format(toNumber(lead["Valor Venda"]))],
     ["Status Lead", lead["Status Lead"]],
+    ["Status Oportunidade", lead["Status Oportunidade"]],
+    ["Motivo Perda", lead["Motivo Perda"]],
   ];
   refs.leadDataSnapshot.innerHTML = "";
   for (const [label, value] of rows) {
@@ -3429,17 +3443,28 @@ function updateLeadStage(leadId, targetStage, source = "kanban") {
     lead["Proposta Enviada ?"] = "N";
     lead["Vendido?"] = "N";
     lead["Valor Venda"] = 0;
+    lead["Status Oportunidade"] = "Aberta";
+    lead["Motivo Perda"] = "";
+    lead["Data da perda"] = "";
   } else if (toStage === "Proposta") {
     lead["Proposta Enviada ?"] = "S";
     lead["Vendido?"] = "N";
     lead["Data de envio"] = lead["Data de envio"] || new Date().toISOString().slice(0, 10);
     lead["Valor Venda"] = 0;
+    if (String(lead["Status Oportunidade"] || "").toUpperCase() !== "PERDIDA") {
+      lead["Status Oportunidade"] = "Aberta";
+      lead["Motivo Perda"] = "";
+      lead["Data da perda"] = "";
+    }
   } else if (toStage === "Venda") {
     lead["Proposta Enviada ?"] = "S";
     lead["Vendido?"] = "S";
     lead["Data de envio"] = lead["Data de envio"] || new Date().toISOString().slice(0, 10);
     lead["Data da venda"] = lead["Data da venda"] || new Date().toISOString().slice(0, 10);
     if (toNumber(lead["Valor Venda"]) <= 0) lead["Valor Venda"] = toNumber(lead["Valor Proposta"]);
+    lead["Status Oportunidade"] = "Ganha";
+    lead["Motivo Perda"] = "";
+    lead["Data da perda"] = "";
     ensureSaleFromLead(lead);
   }
 
@@ -3653,11 +3678,15 @@ function renderLeadTable() {
         const relatedAll = getRelatedSalesForLead(row, getMergedVendasRaw());
         const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale));
         const hasActive = relatedAll.some((sale) => !isSaleCancelled(sale));
+        const lost = String(row["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
         const badge = document.createElement("span");
         badge.className = "stage-badge";
         if (hasActive) {
           badge.classList.add("venda");
           badge.textContent = "Ativa";
+        } else if (lost) {
+          badge.classList.add("cancelada");
+          badge.textContent = "Perdida";
         } else if (hasCancelled) {
           badge.classList.add("cancelada");
           badge.textContent = "Cancelada";
@@ -3765,6 +3794,9 @@ function openLeadConversionModal(leadId) {
   refs.leadSaleStatus.value = hasCancelled && String(lead["Vendido?"] || "").toUpperCase() !== "S" ? "CANCELADA" : "ATIVA";
   refs.leadSaleSocio.value = "N";
   refs.leadSaleObs.value = "";
+  const lostFlag = String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
+  if (refs.leadLossFlag) refs.leadLossFlag.value = lostFlag ? "S" : "N";
+  if (refs.leadLossReason) refs.leadLossReason.value = lostFlag ? String(lead["Motivo Perda"] || "") : "";
   toggleSaleFieldsByFlag();
   if (refs.taskSuggestion) refs.taskSuggestion.textContent = "";
   refs.leadModal.classList.add("open");
@@ -3775,17 +3807,28 @@ function openLeadConversionModal(leadId) {
 function toggleSaleFieldsByFlag() {
   const sold = refs.leadSoldFlag?.value === "S";
   const cancelled = refs.leadSaleStatus?.value === "CANCELADA";
+  const lost = refs.leadLossFlag?.value === "S";
   const showDiscount = sold && !cancelled;
   if (!showDiscount) {
     refs.leadDiscountFlag.value = "N";
     refs.leadNewValue.value = "";
   }
+  if (sold && refs.leadLossFlag) {
+    refs.leadLossFlag.value = "N";
+    if (refs.leadLossReason) refs.leadLossReason.value = "";
+  }
+  if (refs.leadLossReasonWrap) {
+    refs.leadLossReasonWrap.hidden = sold || !lost;
+  }
+  if (refs.leadLossFlagWrap) {
+    refs.leadLossFlagWrap.hidden = sold;
+  }
   refs.leadDiscountFlag.closest("label").hidden = !showDiscount;
   refs.leadNewValueWrap.hidden = !showDiscount || refs.leadDiscountFlag.value !== "S";
-  refs.leadSaleDate.closest("label").hidden = !sold;
+  refs.leadSaleDate.closest("label").hidden = !sold && !lost;
   refs.leadSaleStatus.closest("label").hidden = !sold;
   refs.leadSaleSocio.closest("label").hidden = !sold || cancelled;
-  refs.leadSaleObs.closest("label").hidden = !sold;
+  refs.leadSaleObs.closest("label").hidden = !sold && !lost;
 }
 
 function processLeadConversion() {
@@ -3793,6 +3836,8 @@ function processLeadConversion() {
   if (!lead) return;
   const fromStageBefore = getLeadStage(lead, getActiveVendas());
   const sold = refs.leadSoldFlag.value === "S";
+  const lost = refs.leadLossFlag?.value === "S";
+  const lossReason = String(refs.leadLossReason?.value || "").trim();
   const saleDate = String(refs.leadSaleDate.value || new Date().toISOString().slice(0, 10));
   const saleStatus = refs.leadSaleStatus.value === "CANCELADA" ? "CANCELADA" : "ATIVA";
   const obsRaw = String(refs.leadSaleObs.value || "").trim();
@@ -3806,8 +3851,43 @@ function processLeadConversion() {
     closeLeadConversionModal();
   };
 
-  if (!sold && fromStageBefore !== "Venda") {
-    closeLeadConversionModal();
+  if (!sold && !lost && fromStageBefore !== "Venda") {
+    alert("Sem conversão para salvar. Se o negócio foi perdido, marque \"Negócio perdido = Sim\" e informe o motivo.");
+    return;
+  }
+
+  if (!sold && lost) {
+    if (!lossReason) {
+      alert("Informe o motivo da perda.");
+      return;
+    }
+    const oldValue = toNumber(lead["Valor Venda"] || lead["Valor Proposta"]);
+    const historico = Array.isArray(lead["Histórico Proposta"]) ? [...lead["Histórico Proposta"]] : [];
+    historico.push({
+      when: new Date().toISOString(),
+      oldValue,
+      newValue: 0,
+      discountPct: 0,
+      mode: "lost",
+      note: `Perda registrada: ${lossReason}${obsRaw ? ` | Obs: ${obsRaw}` : ""}`,
+    });
+
+    lead["Proposta Enviada ?"] = "S";
+    lead["Data de envio"] = lead["Data de envio"] || saleDate;
+    lead["Status Lead"] = "Proposta";
+    lead["Status Manual"] = "Proposta";
+    lead["Status Oportunidade"] = "Perdida";
+    lead["Motivo Perda"] = lossReason;
+    lead["Data da perda"] = saleDate;
+    lead["Vendido?"] = "N";
+    lead["Data da venda"] = "";
+    lead["Valor Venda"] = 0;
+    lead["Venda Match Id"] = "";
+    lead["Histórico Proposta"] = historico;
+    lead["Observação Proposta"] = `Perda em ${formatDateBr(saleDate)}: ${lossReason}${obsRaw ? ` | ${obsRaw}` : ""}`;
+    recordLeadStageHistory(lead, fromStageBefore, "Proposta", "modal_perda");
+    upsertCustomLead(lead);
+    persistAndRefresh();
     return;
   }
 
@@ -3834,6 +3914,9 @@ function processLeadConversion() {
     lead["Data da venda"] = "";
     lead["Valor Venda"] = 0;
     lead["Venda Match Id"] = "";
+    lead["Status Oportunidade"] = "Aberta";
+    lead["Motivo Perda"] = "";
+    lead["Data da perda"] = "";
     lead["Histórico Proposta"] = historico;
     recordLeadStageHistory(lead, fromStageBefore, "Proposta", "modal_cancelamento");
     upsertCustomLead(lead);
@@ -3883,6 +3966,9 @@ function processLeadConversion() {
   lead["Observação Proposta"] = obs;
   lead["Status Lead"] = "Venda";
   lead["Status Manual"] = "Venda";
+  lead["Status Oportunidade"] = "Ganha";
+  lead["Motivo Perda"] = "";
+  lead["Data da perda"] = "";
   lead["Vendido?"] = "S";
   lead["Data da venda"] = saleDate;
   lead["Valor Venda"] = finalValue;
@@ -4463,6 +4549,9 @@ function wireEvents() {
     toggleSaleFieldsByFlag();
   });
   refs.leadSaleStatus?.addEventListener("change", () => {
+    toggleSaleFieldsByFlag();
+  });
+  refs.leadLossFlag?.addEventListener("change", () => {
     toggleSaleFieldsByFlag();
   });
   refs.leadDiscountFlag?.addEventListener("change", () => {
