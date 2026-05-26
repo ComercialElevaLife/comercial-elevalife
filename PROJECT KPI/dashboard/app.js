@@ -2885,9 +2885,14 @@ function loadDataMode() {
 function loadCrmViewState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CRM_VIEW);
-    if (!raw) return;
+    if (!raw) {
+      state.crmView.kanbanHidden = false;
+      state.crmView.kanbanCompact = true;
+      return;
+    }
     const parsed = JSON.parse(raw);
-    if (typeof parsed?.kanbanHidden === "boolean") state.crmView.kanbanHidden = parsed.kanbanHidden;
+    // Proteção: o Kanban deve sempre iniciar visível para evitar sumiço por estado salvo antigo.
+    state.crmView.kanbanHidden = false;
     if (typeof parsed?.kanbanCompact === "boolean") state.crmView.kanbanCompact = parsed.kanbanCompact;
   } catch (_) {
     state.crmView = { kanbanHidden: false, kanbanCompact: true };
@@ -4970,6 +4975,10 @@ async function loadData(options = {}) {
   loadCustomGeralFromStorage();
   loadDataMode();
   loadCrmViewState();
+  if (state.crmView.kanbanHidden) {
+    state.crmView.kanbanHidden = false;
+  }
+  persistCrmViewState();
   // Mantém o modo escolhido pelo usuário entre recargas.
   // Se estiver em custom sem dados customizados, retorna ao original.
   if (state.mode === "custom" && !state.customVendas.length && !state.customGeral.length) {
