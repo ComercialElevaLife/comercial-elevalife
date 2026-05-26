@@ -4179,9 +4179,14 @@ async function refreshSourceData() {
 }
 
 function wireEvents() {
-  if (!isLocalRuntime() && refs.btnRefreshData) {
-    refs.btnRefreshData.disabled = true;
-    refs.btnRefreshData.title = "Atualização automática disponível apenas no ambiente local (localhost).";
+  if (refs.btnRefreshData) {
+    if (isLocalRuntime()) {
+      refs.btnRefreshData.textContent = "Atualizar Tudo";
+      refs.btnRefreshData.title = "Atualiza planilha (Excel) e recarrega a base.";
+    } else {
+      refs.btnRefreshData.textContent = "Atualizar Base Online";
+      refs.btnRefreshData.title = "Recarrega a base publicada no ambiente online.";
+    }
   }
 
   refs.tabButtons.forEach((btn) => {
@@ -4207,12 +4212,17 @@ function wireEvents() {
     refs.btnRefreshData.disabled = true;
     refs.btnRefreshData.textContent = "Atualizando...";
     try {
-      await refreshSourceData();
-      await loadData({ forceRefresh: true, showSuccessMessage: true });
-      if (state.mode === "custom") {
-        alert("Dados atualizados com sucesso. Base do Excel atualizada e dados manuais preservados na visualização combinada.");
+      if (isLocalRuntime()) {
+        await refreshSourceData();
+        await loadData({ forceRefresh: true, showSuccessMessage: true });
+        if (state.mode === "custom") {
+          alert("Dados atualizados com sucesso. Base do Excel atualizada e dados manuais preservados na visualização combinada.");
+        } else {
+          alert("Dados atualizados com sucesso.");
+        }
       } else {
-        alert("Dados atualizados com sucesso.");
+        await loadData({ forceRefresh: true, showSuccessMessage: true });
+        alert("Base online atualizada com sucesso.");
       }
     } catch (error) {
       refs.updatedAt.textContent = `Erro ao atualizar dados: ${error.message}`;
