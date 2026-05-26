@@ -96,6 +96,12 @@ const chartIds = [
   "chartConvResponsavel",
   "chartConvCanal",
 ];
+const PLOT_CONFIG = {
+  responsive: true,
+  displaylogo: false,
+  scrollZoom: false,
+  modeBarButtonsToRemove: ["lasso2d", "select2d"],
+};
 const state = {
   raw: null,
   mode: "original",
@@ -1243,16 +1249,26 @@ function closeDetails() {
 }
 
 function baseLayout(extra = {}) {
+  const compact = window.innerWidth <= 1280;
   return {
-    margin: { l: 72, r: 42, t: 72, b: 122 },
+    margin: { l: compact ? 62 : 74, r: compact ? 36 : 52, t: compact ? 72 : 82, b: compact ? 118 : 128 },
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    font: { family: "Montserrat, sans-serif", color: CHART_COLORS.blue900, size: 14 },
-    legend: { orientation: "h", y: -0.28, x: 0, xanchor: "left", font: { size: 13 }, itemsizing: "constant" },
-    xaxis: { automargin: true, tickfont: { size: 12 }, tickangle: -20 },
-    yaxis: { automargin: true, tickfont: { size: 12 } },
+    font: { family: "Montserrat, sans-serif", color: CHART_COLORS.blue900, size: compact ? 13 : 14 },
+    legend: {
+      orientation: "h",
+      y: -0.22,
+      x: 0,
+      xanchor: "left",
+      yanchor: "top",
+      font: { size: compact ? 12 : 13 },
+      itemsizing: "constant",
+      itemwidth: compact ? 72 : 88,
+    },
+    xaxis: { automargin: true, tickfont: { size: compact ? 12 : 13 }, tickangle: compact ? -18 : -14 },
+    yaxis: { automargin: true, tickfont: { size: compact ? 12 : 13 }, tickformat: ",~s" },
     hovermode: "x unified",
-    uniformtext: { minsize: 10, mode: "hide" },
+    uniformtext: { minsize: compact ? 10 : 11, mode: "hide" },
     ...extra,
   };
 }
@@ -1399,7 +1415,7 @@ function renderChartFunilComercial(vendasRows) {
         },
       ],
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartFunilComercial").on("plotly_click", (event) => {
@@ -1631,7 +1647,7 @@ function plotEmpty(chartId, message, perfText) {
         { xref: "paper", yref: "paper", x: 0.5, y: 0.45, showarrow: false, text: "Ajuste os filtros ou selecione outro período.", font: { size: 11, color: "#5A7A80" } },
       ],
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 }
 
@@ -1660,7 +1676,7 @@ function renderChartPropostasSN(geralRows) {
       hovertemplate: "<b>Status %{label}</b><br>Leads: %{value}<br>%{percent}<extra></extra>",
     }],
     baseLayout({ margin: { l: 10, r: 10, t: 46, b: 8 }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartPropSN").on("plotly_click", (event) => {
@@ -1690,7 +1706,7 @@ function renderChartIcpLeads(geralRows) {
       hovertemplate: "<b>ICP %{label}</b><br>Leads: %{value}<br>%{percent}<extra></extra>",
     }],
     baseLayout({ margin: { l: 16, r: 16, t: 50, b: 22 }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartLeadIcp").on("plotly_click", (event) => {
@@ -1723,7 +1739,7 @@ function renderChartEntradasLeads(geralRows) {
     "chartLeadEntradas",
     [{ type: "bar", orientation: "h", y, x, text: x.map((v) => NUM.format(v)), textposition: y.length <= 8 ? "auto" : "none", marker: { color: CHART_COLORS.blue500 }, customdata: keys, hovertemplate: "<b>%{y}</b><br>Entradas: %{x}<extra></extra>" }],
     baseLayout({ margin: { l: 140, r: 20, t: 54, b: 40 }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartLeadEntradas").on("plotly_click", (event) => {
@@ -1749,7 +1765,7 @@ function renderChartPropostasEnviadas(geralRows) {
     "chartPropEnviadas",
     [{ type: "bar", x, y, text: y.map((v) => NUM.format(v)), textposition: y.length <= 6 ? "outside" : "none", cliponaxis: false, marker: { color: CHART_COLORS.coral700 }, customdata: periodKeys, hovertemplate: "<b>%{x}</b><br>Propostas: %{y}<extra></extra>" }],
     baseLayout({ annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartPropEnviadas").on("plotly_click", (event) => {
@@ -1773,7 +1789,7 @@ function renderChartPropostasSemana(geralRows) {
     "chartPropSemana",
     [{ type: "bar", x, y, text: y.map((v) => NUM.format(v)), textposition: y.length <= 8 ? "auto" : "none", marker: { color: CHART_COLORS.blue200 }, customdata: x, hovertemplate: "<b>%{x}</b><br>Propostas: %{y}<extra></extra>" }],
     baseLayout({ annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartPropSemana").on("plotly_click", (event) => {
@@ -1799,7 +1815,7 @@ function renderChartVolumePropostas(geralRows) {
     "chartPropVolume",
     [{ type: "bar", x, y, text: y.map((v) => BRL.format(v)), textposition: y.length <= 6 ? "outside" : "none", cliponaxis: false, marker: { color: CHART_COLORS.coral500 }, customdata: periodKeys, hovertemplate: "<b>%{x}</b><br>Volume: %{text}<extra></extra>" }],
     baseLayout({ yaxis: { tickprefix: "R$ ", separatethousands: true }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartPropVolume").on("plotly_click", (event) => {
@@ -1862,13 +1878,13 @@ function renderChartVendas(vendasRows) {
       }] : []),
     ],
     baseLayout({
-      legend: { orientation: "h", y: -0.25 },
+      legend: { orientation: "h", y: -0.22, x: 0, xanchor: "left", yanchor: "top", font: { size: 13 } },
       xaxis: { tickangle: -22, automargin: true },
       yaxis: { title: "Qtd" },
-      yaxis2: { title: "Valor (R$)", overlaying: "y", side: "right", tickprefix: "R$ ", separatethousands: true, tickfont: { size: 12 } },
+      yaxis2: { title: "Valor (R$)", overlaying: "y", side: "right", tickprefix: "R$ ", separatethousands: true, automargin: true, tickfont: { size: 13 } },
       annotations: perfAnnotation(perf.text),
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartVendas").on("plotly_click", (event) => {
@@ -1891,7 +1907,7 @@ function renderChartVendasServico(vendasRows) {
     "chartVendasServico",
     [{ type: "bar", x, y, text: y.map((v) => BRL.format(v)), textposition: x.length <= 6 ? "outside" : "none", cliponaxis: false, marker: { color: CHART_THEME.realized }, customdata: x, hovertemplate: "<b>%{x}</b><br>Valor: %{text}<extra></extra>" }],
     baseLayout({ xaxis: { tickangle: -18, automargin: true }, yaxis: { tickprefix: "R$ ", separatethousands: true }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartVendasServico").on("plotly_click", (event) => {
@@ -1980,7 +1996,7 @@ function renderChartMapaVendas(vendasRows) {
       },
       annotations: perfAnnotation(perf.text),
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartMapaVendas").on("plotly_click", (event) => {
@@ -2008,7 +2024,7 @@ function renderChartVendasTipo(vendasRows) {
     "chartVendasTipo",
     [{ type: "pie", hole: 0.58, labels, values, textinfo: "percent", marker: { colors: [CHART_COLORS.coral500, CHART_COLORS.blue500, CHART_COLORS.blue200] }, hovertemplate: "<b>Tipo %{label}</b><br>Valor: R$ %{value:,.2f}<br>%{percent}<extra></extra>" }],
     baseLayout({ margin: { l: 10, r: 10, t: 46, b: 8 }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartVendasTipo").on("plotly_click", (event) => {
@@ -2033,7 +2049,7 @@ function renderChartVendasSocio(vendasRows) {
     "chartVendasSocio",
     [{ type: "pie", hole: 0.58, labels, values, textinfo: "percent", marker: { colors: [CHART_COLORS.blue700, CHART_COLORS.coral700, CHART_COLORS.blue200] }, hovertemplate: "<b>Origem %{label}</b><br>Valor: R$ %{value:,.2f}<br>%{percent}<extra></extra>" }],
     baseLayout({ margin: { l: 10, r: 10, t: 46, b: 8 }, annotations: perfAnnotation(perf.text) }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartVendasSocio").on("plotly_click", (event) => {
@@ -2252,12 +2268,12 @@ function renderChartAcumuladoMeta(vendasRows) {
       }] : []),
     ],
     baseLayout({
-      legend: { orientation: "h", y: -0.25 },
+      legend: { orientation: "h", y: -0.22, x: 0, xanchor: "left", yanchor: "top", font: { size: 13 } },
       yaxis: { tickprefix: "R$ ", separatethousands: true },
-      yaxis2: { overlaying: "y", side: "right", ticksuffix: "%", range: [0, Math.max(120, Math.max(...yPct) * 1.2)] },
+      yaxis2: { overlaying: "y", side: "right", ticksuffix: "%", range: [0, Math.max(120, Math.max(...yPct) * 1.2)], automargin: true, tickfont: { size: 13 } },
       annotations: perfAnnotation(perf.text),
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartAcumuladoMeta").on("plotly_click", (event) => {
@@ -2330,7 +2346,7 @@ function renderChartMetaGauge(vendasRows) {
         },
       ],
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartMetaGauge").on("plotly_click", () => {
@@ -2383,7 +2399,7 @@ function renderChartMetaCompare(vendasRows) {
         },
       ],
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById("chartMetaCompare").on("plotly_click", () => {
@@ -2462,12 +2478,12 @@ function renderConversionChart(chartId, title, geralRows, vendasRows, keyName) {
     ],
     baseLayout({
       barmode: "group",
-      legend: { orientation: "h", y: -0.25 },
+      legend: { orientation: "h", y: -0.22, x: 0, xanchor: "left", yanchor: "top", font: { size: 13 } },
       yaxis: { title: "Qtd" },
-      yaxis2: { overlaying: "y", side: "right", ticksuffix: "%", range: [0, 100] },
+      yaxis2: { overlaying: "y", side: "right", ticksuffix: "%", range: [0, 100], automargin: true, tickfont: { size: 13 } },
       annotations: perfAnnotation(perf.text),
     }),
-    { responsive: true }
+    PLOT_CONFIG
   );
 
   document.getElementById(chartId).on("plotly_click", (event) => {
@@ -5016,3 +5032,4 @@ loadData({ forceRefresh: true }).catch((error) => {
   refs.updatedAt.textContent = `Erro ao carregar dados: ${error.message}`;
   console.error(error);
 });
+
