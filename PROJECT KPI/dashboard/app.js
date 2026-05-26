@@ -4241,8 +4241,14 @@ function wireEvents() {
           alert("Dados atualizados com sucesso.");
         }
       } else {
+        const sourceBefore = String(state.raw?.generatedAt || "");
         await loadData({ forceRefresh: true, showSuccessMessage: true });
-        alert("Base online atualizada com sucesso.");
+        const sourceAfter = String(state.raw?.generatedAt || "");
+        if (sourceAfter && sourceBefore && sourceAfter === sourceBefore) {
+          alert("Sincronização concluída. Não houve nova publicação da base desde a última versão online.");
+        } else {
+          alert("Base online atualizada com nova publicação.");
+        }
       }
     } catch (error) {
       refs.updatedAt.textContent = `Erro ao atualizar dados: ${error.message}`;
@@ -4550,9 +4556,15 @@ async function loadData(options = {}) {
     setDataMode("original");
   }
   const modeLabel = state.mode === "custom" ? "Base combinada ativa" : "Base original ativa";
-  refs.updatedAt.textContent = showSuccessMessage
-    ? `Dados atualizados em ${refreshWhen.toLocaleString("pt-BR")} | Fonte: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`
-    : `Base atualizada em: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`;
+  if (isLocalRuntime()) {
+    refs.updatedAt.textContent = showSuccessMessage
+      ? `Dados atualizados em ${refreshWhen.toLocaleString("pt-BR")} | Fonte: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`
+      : `Base atualizada em: ${sourceWhen.toLocaleString("pt-BR")} | ${modeLabel}`;
+  } else {
+    refs.updatedAt.textContent = showSuccessMessage
+      ? `Sincronização online em ${refreshWhen.toLocaleString("pt-BR")} | ${modeLabel}`
+      : `Painel online carregado em ${refreshWhen.toLocaleString("pt-BR")} | ${modeLabel}`;
+  }
   const reconciliationChanges = reconcileLeadsFromSalesBase();
   if (reconciliationChanges > 0) {
     refs.updatedAt.textContent += ` | Reconciliação automática: ${reconciliationChanges} ajuste(s)`;
