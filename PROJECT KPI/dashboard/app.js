@@ -2788,6 +2788,7 @@ function loadCrmViewState() {
 function applyCrmViewState() {
   refs.crmWorkspace?.classList.toggle("kanban-hidden", state.crmView.kanbanHidden);
   refs.crmKanban?.classList.toggle("compact", state.crmView.kanbanCompact);
+  refs.crmKanbanCard?.classList.toggle("collapsed", state.crmView.kanbanHidden);
   if (refs.toggleKanbanVisibility) {
     refs.toggleKanbanVisibility.textContent = state.crmView.kanbanHidden ? "Mostrar Kanban" : "Ocultar Kanban";
   }

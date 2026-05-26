@@ -458,6 +458,15 @@ select:focus-visible {
 }
 
 .crm-workspace.kanban-hidden .crm-kanban-card {
+  min-height: auto;
+  max-height: none;
+}
+
+.crm-kanban-card.collapsed .kanban-board,
+.crm-kanban-card.collapsed .actions-inline + .hint,
+.crm-kanban-card.collapsed #enableTaskNotifications,
+.crm-kanban-card.collapsed #btnTaskDigestEmail,
+.crm-kanban-card.collapsed #taskNotificationStatus {
   display: none;
 }
 
