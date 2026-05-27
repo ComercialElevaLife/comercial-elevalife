@@ -59,6 +59,13 @@ body {
   gap: 8px;
 }
 
+.brand-logo-image {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
 .brand-mark-dot {
   width: 12px;
   height: 12px;
@@ -82,6 +89,98 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.4px;
   line-height: 1.4;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.ebook-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    linear-gradient(165deg, #7f243f 0%, #5e1a31 48%, #3b1020 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--card-shadow);
+  padding: 18px 18px 16px;
+}
+
+.ebook-panel::after {
+  content: "";
+  position: absolute;
+  inset: auto -18% -60% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199, 237, 255, 0.22), rgba(199, 237, 255, 0));
+}
+
+.ebook-kicker {
+  margin: 0;
+  color: #ffe0ea;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+}
+
+.ebook-title {
+  margin: 8px 0 0;
+  color: #ffffff;
+  line-height: 1.08;
+  font-size: 1.55rem;
+}
+
+.ebook-subtitle {
+  margin: 9px 0 0;
+  color: #ffd6e4;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ebook-cover-image {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 14px auto 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 14px 28px rgba(28, 8, 16, 0.35);
+}
+
+.iceberg {
+  width: 164px;
+  margin: 16px auto 0;
+  position: relative;
+}
+
+.iceberg-top {
+  width: 96px;
+  height: 68px;
+  margin: 0 auto;
+  background: linear-gradient(160deg, #f6fcff 10%, #cfe8f9 65%, #96bfdf 100%);
+  clip-path: polygon(50% 0%, 80% 30%, 100% 100%, 0 100%, 20% 30%);
+}
+
+.iceberg-bottom {
+  width: 164px;
+  height: 84px;
+  margin: -2px auto 0;
+  background: linear-gradient(180deg, #66a5d6 0%, #2c6ea9 100%);
+  clip-path: polygon(50% 0%, 84% 16%, 100% 100%, 0 100%, 16% 16%);
+  opacity: 0.84;
+}
+
+.ebook-foot {
+  margin: 12px 0 0;
+  color: #ffd2e2;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .card {
@@ -293,6 +392,11 @@ button[disabled] {
 @media (min-width: 900px) {
   .hero {
     padding: 30px 20px 48px;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
   }
 
   .card {
