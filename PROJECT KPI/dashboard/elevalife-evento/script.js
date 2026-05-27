@@ -49,8 +49,12 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  const nome = form.nome.value.trim();
+  const sobrenome = form.sobrenome.value.trim();
+  const nomeCompleto = `${nome} ${sobrenome}`.trim();
+
   const payload = {
-    nome: form.nome.value.trim(),
+    nome: nomeCompleto,
     telefone: form.telefone.value.trim(),
     email: form.email.value.trim(),
     empresa: form.empresa.value.trim(),
@@ -94,6 +98,7 @@ form.addEventListener("submit", async (event) => {
 
 function validateForm() {
   const nome = form.nome.value.trim();
+  const sobrenome = form.sobrenome.value.trim();
   const telefone = form.telefone.value.trim();
   const email = form.email.value.trim();
   const empresa = form.empresa.value.trim();
@@ -101,7 +106,7 @@ function validateForm() {
   const colaboradores = form.colaboradores.value;
   const consentimento = form.consentimento.checked;
 
-  if (!nome || !telefone || !email || !empresa || !cargo || !colaboradores) {
+  if (!nome || !sobrenome || !telefone || !email || !empresa || !cargo || !colaboradores) {
     return "Preencha todos os campos obrigatórios.";
   }
 
