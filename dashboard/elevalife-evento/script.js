@@ -1,4 +1,4 @@
-const SCRIPT_URL = "INSERIR_URL_DO_GOOGLE_APPS_SCRIPT_AQUI";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuDH_BTVfbWyq4DMbaWReBUTlm91CDV4HG7O6XnxoAwok0dtni5aJDVw2gzPRxdMTbkg/exec";
 const EBOOK_URL = "https://elevalife-my.sharepoint.com/:b:/g/personal/leonardo_elevalife_com_br/IQBzo0-PPIipRZn9TXQItNchAfV2Ph436NAuZmqrDDTrtOk";
 const ORIGEM = "Evento presencial - QR Code e-book NR-1";
 
@@ -49,8 +49,12 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  const nome = form.nome.value.trim();
+  const sobrenome = form.sobrenome.value.trim();
+  const nomeCompleto = `${nome} ${sobrenome}`.trim();
+
   const payload = {
-    nome: form.nome.value.trim(),
+    nome: nomeCompleto,
     telefone: form.telefone.value.trim(),
     email: form.email.value.trim(),
     empresa: form.empresa.value.trim(),
@@ -94,6 +98,7 @@ form.addEventListener("submit", async (event) => {
 
 function validateForm() {
   const nome = form.nome.value.trim();
+  const sobrenome = form.sobrenome.value.trim();
   const telefone = form.telefone.value.trim();
   const email = form.email.value.trim();
   const empresa = form.empresa.value.trim();
@@ -101,7 +106,7 @@ function validateForm() {
   const colaboradores = form.colaboradores.value;
   const consentimento = form.consentimento.checked;
 
-  if (!nome || !telefone || !email || !empresa || !cargo || !colaboradores) {
+  if (!nome || !sobrenome || !telefone || !email || !empresa || !cargo || !colaboradores) {
     return "Preencha todos os campos obrigatórios.";
   }
 
