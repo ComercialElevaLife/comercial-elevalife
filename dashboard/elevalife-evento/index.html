@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Landing page de captação de leads ElevaLife para download de e-book e retirada de brinde no evento." />
+  <title>ElevaLife | E-book NR-1 e Riscos Psicossociais</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-label="Cadastro para e-book e brinde ElevaLife">
+      <div class="iceberg" aria-hidden="true">
+        <div class="iceberg-top"></div>
+        <div class="iceberg-bottom"></div>
+      </div>
+
+      <article class="card" id="lead-card">
+        <header class="card-header">
+          <div class="brand" aria-label="Marca ElevaLife">
+            <!-- Se quiser usar imagem da logo, substitua pelo caminho abaixo -->
+            <!-- <img src="./logo-elevalife.png" alt="ElevaLife" class="brand-logo" /> -->
+            <span class="brand-pill">ElevaLife</span>
+          </div>
+          <h1>Baixe gratuitamente o e-book da ElevaLife</h1>
+          <p class="subtitle">NR-1 e Riscos Psicossociais: conheça 7 indicadores essenciais para monitorar sinais de alerta na sua empresa.</p>
+          <p class="support">Preencha seus dados para liberar o download do material e desbloquear seu brinde exclusivo no balcão da ElevaLife.</p>
+          <p class="form-intro">O cadastro é rápido e o acesso ao material será liberado na sequência.</p>
+        </header>
+
+        <form id="lead-form" novalidate>
+          <div class="field">
+            <label for="nome">Nome completo</label>
+            <input id="nome" name="nome" type="text" placeholder="Digite seu nome completo" autocomplete="name" required />
+          </div>
+
+          <div class="field">
+            <label for="telefone">Telefone / WhatsApp</label>
+            <input id="telefone" name="telefone" type="tel" inputmode="tel" maxlength="15" placeholder="Digite seu WhatsApp" autocomplete="tel" required />
+          </div>
+
+          <div class="field">
+            <label for="email">E-mail corporativo</label>
+            <input id="email" name="email" type="email" placeholder="Digite seu e-mail profissional" autocomplete="email" required />
+          </div>
+
+          <div class="field">
+            <label for="empresa">Empresa</label>
+            <input id="empresa" name="empresa" type="text" placeholder="Nome da empresa" autocomplete="organization" required />
+          </div>
+
+          <div class="field">
+            <label for="cargo">Cargo</label>
+            <input id="cargo" name="cargo" type="text" placeholder="Seu cargo" autocomplete="organization-title" required />
+          </div>
+
+          <div class="field">
+            <label for="colaboradores">Número aproximado de colaboradores</label>
+            <select id="colaboradores" name="colaboradores" required>
+              <option value="" selected>Selecione uma opção</option>
+              <option>Até 50 colaboradores</option>
+              <option>51 a 100 colaboradores</option>
+              <option>101 a 200 colaboradores</option>
+              <option>201 a 500 colaboradores</option>
+              <option>501 a 1.000 colaboradores</option>
+              <option>Acima de 1.000 colaboradores</option>
+              <option>Não sei informar</option>
+            </select>
+          </div>
+
+          <div class="consent-wrapper">
+            <input id="consentimento" name="consentimento" type="checkbox" required />
+            <label for="consentimento">Autorizo a ElevaLife a entrar em contato comigo para compartilhar conteúdos, informações e soluções relacionadas à saúde corporativa, ergonomia, promoção da saúde e gestão de riscos psicossociais.</label>
+          </div>
+
+          <div class="feedback" id="feedback" role="alert" aria-live="assertive"></div>
+
+          <button type="submit" id="submit-button">Liberar e-book e brinde</button>
+          <p class="secure-note">Seus dados serão usados apenas para contato profissional relacionado ao conteúdo e soluções da ElevaLife.</p>
+        </form>
+      </article>
+
+      <article class="card success hidden" id="success-card" aria-live="polite">
+        <header class="card-header success-header">
+          <div class="check">✓</div>
+          <h2>E-book liberado com sucesso!</h2>
+          <p>Obrigado pelo cadastro. Agora você já pode baixar o material da ElevaLife sobre NR-1 e Riscos Psicossociais.</p>
+        </header>
+
+        <a id="download-button" class="download-button" href="#" target="_blank" rel="noopener noreferrer">Baixar e-book agora</a>
+
+        <p class="gift-message">Mostre esta tela para nossa equipe no balcão e retire sua sacola com brindes.</p>
+        <p class="small-message">Em breve, nosso time poderá entrar em contato para compartilhar materiais e práticas sobre gestão de riscos psicossociais, ergonomia e saúde corporativa.</p>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
