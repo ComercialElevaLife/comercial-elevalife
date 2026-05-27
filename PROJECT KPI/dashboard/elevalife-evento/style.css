@@ -1,9 +1,9 @@
 :root {
-  --deep-1: #041f3a;
-  --deep-2: #07315a;
-  --deep-3: #0a4b83;
-  --ocean: #0e5d9f;
-  --cyan: #46a4d7;
+  --deep-1: #2a0d18;
+  --deep-2: #4b1528;
+  --deep-3: #6e203b;
+  --wine: #7f243f;
+  --rose: #b74d71;
   --ice: #d9efff;
   --white: #ffffff;
   --ink: #0f2434;
@@ -29,9 +29,9 @@ body {
   color: var(--ink);
   min-height: 100vh;
   background:
-    radial-gradient(1000px 460px at 8% -2%, rgba(98, 190, 243, 0.18), rgba(98, 190, 243, 0) 60%),
-    radial-gradient(850px 450px at 100% 0%, rgba(32, 115, 186, 0.35), rgba(32, 115, 186, 0) 60%),
-    linear-gradient(165deg, #06294a 0%, #073863 45%, #05223f 100%);
+    radial-gradient(1000px 460px at 8% -2%, rgba(206, 116, 148, 0.2), rgba(206, 116, 148, 0) 60%),
+    radial-gradient(850px 450px at 100% 0%, rgba(126, 36, 63, 0.35), rgba(126, 36, 63, 0) 60%),
+    linear-gradient(165deg, #2a0d18 0%, #4b1528 45%, #220913 100%);
 }
 
 .page {
@@ -49,7 +49,7 @@ body {
   border-radius: 16px;
   padding: 12px 14px;
   margin-bottom: 14px;
-  background: linear-gradient(120deg, rgba(10, 58, 100, 0.72), rgba(7, 41, 75, 0.72));
+  background: linear-gradient(120deg, rgba(110, 32, 59, 0.72), rgba(75, 21, 40, 0.72));
   backdrop-filter: blur(2px);
 }
 
@@ -63,12 +63,12 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #bceaff, #48a3d5);
-  box-shadow: 0 0 0 3px rgba(188, 234, 255, 0.14);
+  background: linear-gradient(135deg, #ffd4e1, #d46f94);
+  box-shadow: 0 0 0 3px rgba(255, 212, 225, 0.14);
 }
 
 .brand-mark-text {
-  color: #d9f3ff;
+  color: #ffe7ee;
   font-weight: 800;
   letter-spacing: 0.3px;
   font-size: 1.05rem;
@@ -76,7 +76,7 @@ body {
 
 .brand-audience {
   margin: 8px 0 0;
-  color: #b6dbf6;
+  color: #f6cddd;
   font-size: 0.82rem;
   line-height: 1.4;
 }
@@ -93,7 +93,7 @@ body {
   border-radius: var(--radius);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
-    linear-gradient(165deg, #1071b8 0%, #0c4f87 48%, #073259 100%);
+    linear-gradient(165deg, #7f243f 0%, #5e1a31 48%, #3b1020 100%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: var(--card-shadow);
   padding: 18px 18px 16px;
@@ -111,7 +111,7 @@ body {
 
 .ebook-kicker {
   margin: 0;
-  color: #cfeeff;
+  color: #ffe0ea;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 1.2px;
@@ -127,7 +127,7 @@ body {
 
 .ebook-subtitle {
   margin: 9px 0 0;
-  color: #dbf3ff;
+  color: #ffd6e4;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -157,7 +157,7 @@ body {
 
 .ebook-foot {
   margin: 12px 0 0;
-  color: #cce8fb;
+  color: #ffd2e2;
   text-align: center;
   font-size: 0.82rem;
   line-height: 1.35;
@@ -182,7 +182,7 @@ body {
   display: inline-block;
   padding: 8px 14px;
   border-radius: 999px;
-  background: linear-gradient(130deg, #0d4b7f, #0a2f53);
+  background: linear-gradient(130deg, #7f243f, #56172d);
   color: var(--white);
   font-weight: 800;
   letter-spacing: 0.2px;
@@ -300,7 +300,7 @@ button,
   min-height: 56px;
   border: 0;
   border-radius: 14px;
-  background: linear-gradient(135deg, #0f5e9f, #0a3f6d);
+  background: linear-gradient(135deg, #8e2b49, #5f1a32);
   color: var(--white);
   font-weight: 800;
   font-size: 1rem;
@@ -311,7 +311,7 @@ button,
   justify-content: center;
   align-items: center;
   padding: 0 16px;
-  box-shadow: 0 8px 20px rgba(7, 49, 90, 0.25);
+  box-shadow: 0 8px 20px rgba(72, 18, 39, 0.28);
 }
 
 button:active,
