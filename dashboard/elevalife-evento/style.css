@@ -1,0 +1,289 @@
+:root {
+  --blue-950: #062743;
+  --blue-900: #0b3a67;
+  --blue-800: #0f4f86;
+  --blue-600: #2f74b5;
+  --blue-300: #92bee5;
+  --ice: #dff2ff;
+  --white: #ffffff;
+  --ink: #0f2030;
+  --danger: #b42318;
+  --success: #067647;
+  --radius: 18px;
+  --shadow: 0 12px 32px rgba(4, 31, 60, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(120% 100% at 20% 0%, #2f74b5 0%, var(--blue-900) 42%, var(--blue-950) 100%);
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.hero {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  position: relative;
+}
+
+.iceberg {
+  width: 180px;
+  margin: 0 auto 16px;
+  position: relative;
+}
+
+.iceberg-top {
+  width: 110px;
+  height: 72px;
+  margin: 0 auto;
+  background: linear-gradient(160deg, #ffffff 10%, #cde8fb 65%, #9dcced 100%);
+  clip-path: polygon(50% 0%, 78% 30%, 100% 100%, 0 100%, 22% 30%);
+}
+
+.iceberg-bottom {
+  width: 180px;
+  height: 90px;
+  margin: -2px auto 0;
+  background: linear-gradient(180deg, #75aed8 0%, #2f74b5 100%);
+  clip-path: polygon(50% 0%, 85% 16%, 100% 100%, 0 100%, 15% 16%);
+  opacity: 0.75;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px 18px;
+}
+
+.card + .card {
+  margin-top: 14px;
+}
+
+.brand {
+  margin-bottom: 14px;
+}
+
+.brand-pill {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--blue-900);
+  color: var(--white);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.brand-logo {
+  max-width: 160px;
+  height: auto;
+  display: block;
+}
+
+.card-header h1,
+.card-header h2 {
+  margin: 0;
+  color: #08263f;
+  line-height: 1.2;
+}
+
+.card-header h1 {
+  font-size: 1.5rem;
+}
+
+.card-header h2 {
+  font-size: 1.45rem;
+}
+
+.subtitle,
+.support,
+.form-intro {
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+.subtitle {
+  font-weight: 700;
+  color: #0a3a60;
+}
+
+.form-intro {
+  font-size: 0.95rem;
+  color: #274962;
+}
+
+form {
+  margin-top: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+button,
+.download-button {
+  font: inherit;
+}
+
+input,
+select {
+  min-height: 52px;
+  border: 1px solid #b7cfe3;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: #f9fcff;
+  color: var(--ink);
+}
+
+input:focus,
+select:focus,
+button:focus,
+.download-button:focus {
+  outline: 3px solid rgba(21, 94, 176, 0.35);
+  outline-offset: 2px;
+}
+
+.consent-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 14px;
+}
+
+.consent-wrapper input {
+  margin-top: 4px;
+  min-height: auto;
+}
+
+.consent-wrapper label {
+  font-weight: 500;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.feedback {
+  min-height: 22px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.feedback.success {
+  color: var(--success);
+}
+
+button,
+.download-button {
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  color: var(--white);
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+}
+
+button:active,
+.download-button:active {
+  transform: translateY(1px);
+}
+
+button[disabled] {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.secure-note {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: #36556b;
+}
+
+.success-header {
+  text-align: center;
+}
+
+.check {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9fbee;
+  color: var(--success);
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 auto 12px;
+}
+
+.gift-message {
+  margin: 18px 0 0;
+  font-weight: 800;
+  color: #0d3050;
+  text-align: center;
+}
+
+.small-message {
+  margin: 10px 0 0;
+  color: #35566e;
+  line-height: 1.45;
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 36px 20px 48px;
+  }
+
+  .card {
+    padding: 30px;
+  }
+
+  .card-header h1 {
+    font-size: 1.95rem;
+  }
+
+  .card-header h2 {
+    font-size: 1.8rem;
+  }
+}
