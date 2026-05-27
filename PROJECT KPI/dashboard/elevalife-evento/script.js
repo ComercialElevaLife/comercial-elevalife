@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVCO5q3eiD-kpo81vZkK9N61GG8v7Ug5GvY2QqiNG3OfbJcEkvijNoljW8HHZyhwRKOg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuDH_BTVfbWyq4DMbaWReBUTlm91CDV4HG7O6XnxoAwok0dtni5aJDVw2gzPRxdMTbkg/exec";
 const EBOOK_URL = "https://elevalife-my.sharepoint.com/:b:/g/personal/leonardo_elevalife_com_br/IQBzo0-PPIipRZn9TXQItNchAfV2Ph436NAuZmqrDDTrtOk";
 const ORIGEM = "Evento presencial - QR Code e-book NR-1";
 
