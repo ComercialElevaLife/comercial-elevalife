@@ -1,16 +1,17 @@
 :root {
-  --blue-950: #062743;
-  --blue-900: #0b3a67;
-  --blue-800: #0f4f86;
-  --blue-600: #2f74b5;
-  --blue-300: #92bee5;
-  --ice: #dff2ff;
+  --deep-1: #2a0d18;
+  --deep-2: #4b1528;
+  --deep-3: #6e203b;
+  --wine: #7f243f;
+  --rose: #b74d71;
+  --ice: #d9efff;
   --white: #ffffff;
-  --ink: #0f2030;
+  --ink: #0f2434;
+  --muted: #486273;
   --danger: #b42318;
   --success: #067647;
-  --radius: 18px;
-  --shadow: 0 12px 32px rgba(4, 31, 60, 0.25);
+  --radius: 20px;
+  --card-shadow: 0 16px 40px rgba(2, 20, 43, 0.28);
 }
 
 * {
@@ -26,8 +27,11 @@ body {
 body {
   font-family: "Manrope", sans-serif;
   color: var(--ink);
-  background: radial-gradient(120% 100% at 20% 0%, #2f74b5 0%, var(--blue-900) 42%, var(--blue-950) 100%);
   min-height: 100vh;
+  background:
+    radial-gradient(1000px 460px at 8% -2%, rgba(206, 116, 148, 0.2), rgba(206, 116, 148, 0) 60%),
+    radial-gradient(850px 450px at 100% 0%, rgba(126, 36, 63, 0.35), rgba(126, 36, 63, 0) 60%),
+    linear-gradient(165deg, #2a0d18 0%, #4b1528 45%, #220913 100%);
 }
 
 .page {
@@ -35,40 +39,157 @@ body {
 }
 
 .hero {
-  max-width: 980px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 18px 14px 38px;
+}
+
+.hero-banner {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: linear-gradient(120deg, rgba(110, 32, 59, 0.72), rgba(75, 21, 40, 0.72));
+  backdrop-filter: blur(2px);
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo-image {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
+.brand-mark-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd4e1, #d46f94);
+  box-shadow: 0 0 0 3px rgba(255, 212, 225, 0.14);
+}
+
+.brand-mark-text {
+  color: #ffe7ee;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: 1.05rem;
+}
+
+.brand-audience {
+  margin: 8px 0 0;
+  color: #f6cddd;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  line-height: 1.4;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.ebook-panel {
   position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    linear-gradient(165deg, #7f243f 0%, #5e1a31 48%, #3b1020 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--card-shadow);
+  padding: 18px 18px 16px;
+}
+
+.ebook-panel::after {
+  content: "";
+  position: absolute;
+  inset: auto -18% -60% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199, 237, 255, 0.22), rgba(199, 237, 255, 0));
+}
+
+.ebook-kicker {
+  margin: 0;
+  color: #ffe0ea;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+}
+
+.ebook-title {
+  margin: 8px 0 0;
+  color: #ffffff;
+  line-height: 1.08;
+  font-size: 1.55rem;
+}
+
+.ebook-subtitle {
+  margin: 9px 0 0;
+  color: #ffd6e4;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ebook-cover-image {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 14px auto 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 14px 28px rgba(28, 8, 16, 0.35);
 }
 
 .iceberg {
-  width: 180px;
-  margin: 0 auto 16px;
+  width: 164px;
+  margin: 16px auto 0;
   position: relative;
 }
 
 .iceberg-top {
-  width: 110px;
-  height: 72px;
+  width: 96px;
+  height: 68px;
   margin: 0 auto;
-  background: linear-gradient(160deg, #ffffff 10%, #cde8fb 65%, #9dcced 100%);
-  clip-path: polygon(50% 0%, 78% 30%, 100% 100%, 0 100%, 22% 30%);
+  background: linear-gradient(160deg, #f6fcff 10%, #cfe8f9 65%, #96bfdf 100%);
+  clip-path: polygon(50% 0%, 80% 30%, 100% 100%, 0 100%, 20% 30%);
 }
 
 .iceberg-bottom {
-  width: 180px;
-  height: 90px;
+  width: 164px;
+  height: 84px;
   margin: -2px auto 0;
-  background: linear-gradient(180deg, #75aed8 0%, #2f74b5 100%);
-  clip-path: polygon(50% 0%, 85% 16%, 100% 100%, 0 100%, 15% 16%);
-  opacity: 0.75;
+  background: linear-gradient(180deg, #66a5d6 0%, #2c6ea9 100%);
+  clip-path: polygon(50% 0%, 84% 16%, 100% 100%, 0 100%, 16% 16%);
+  opacity: 0.84;
+}
+
+.ebook-foot {
+  margin: 12px 0 0;
+  color: #ffd2e2;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.98);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 24px 18px;
+  box-shadow: var(--card-shadow);
+  padding: 22px 16px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .card + .card {
@@ -76,30 +197,24 @@ body {
 }
 
 .brand {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .brand-pill {
   display: inline-block;
   padding: 8px 14px;
   border-radius: 999px;
-  background: var(--blue-900);
+  background: linear-gradient(130deg, #7f243f, #56172d);
   color: var(--white);
   font-weight: 800;
   letter-spacing: 0.2px;
 }
 
-.brand-logo {
-  max-width: 160px;
-  height: auto;
-  display: block;
-}
-
 .card-header h1,
 .card-header h2 {
   margin: 0;
-  color: #08263f;
-  line-height: 1.2;
+  color: #082742;
+  line-height: 1.18;
 }
 
 .card-header h1 {
@@ -119,12 +234,16 @@ body {
 
 .subtitle {
   font-weight: 700;
-  color: #0a3a60;
+  color: #0a416b;
+}
+
+.support {
+  color: #28485e;
 }
 
 .form-intro {
   font-size: 0.95rem;
-  color: #274962;
+  color: #2d566f;
 }
 
 form {
@@ -135,7 +254,7 @@ form {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 13px;
 }
 
 label {
@@ -153,10 +272,10 @@ button,
 input,
 select {
   min-height: 52px;
-  border: 1px solid #b7cfe3;
+  border: 1px solid #b4cde0;
   border-radius: 12px;
   padding: 0 14px;
-  background: #f9fcff;
+  background: #f7fbff;
   color: var(--ink);
 }
 
@@ -164,7 +283,7 @@ input:focus,
 select:focus,
 button:focus,
 .download-button:focus {
-  outline: 3px solid rgba(21, 94, 176, 0.35);
+  outline: 3px solid rgba(16, 103, 181, 0.35);
   outline-offset: 2px;
 }
 
@@ -183,7 +302,7 @@ button:focus,
 .consent-wrapper label {
   font-weight: 500;
   font-size: 0.92rem;
-  line-height: 1.45;
+  line-height: 1.42;
 }
 
 .feedback {
@@ -203,18 +322,18 @@ button,
   min-height: 56px;
   border: 0;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  background: linear-gradient(135deg, #8e2b49, #5f1a32);
   color: var(--white);
   font-weight: 800;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 120ms ease, filter 120ms ease;
   text-align: center;
   text-decoration: none;
   display: inline-flex;
   justify-content: center;
   align-items: center;
   padding: 0 16px;
+  box-shadow: 0 8px 20px rgba(72, 18, 39, 0.28);
 }
 
 button:active,
@@ -230,7 +349,7 @@ button[disabled] {
 .secure-note {
   margin: 12px 0 0;
   font-size: 0.82rem;
-  color: #36556b;
+  color: var(--muted);
 }
 
 .success-header {
@@ -270,9 +389,14 @@ button[disabled] {
   display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .hero {
-    padding: 36px 20px 48px;
+    padding: 30px 20px 48px;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
   }
 
   .card {
@@ -280,10 +404,10 @@ button[disabled] {
   }
 
   .card-header h1 {
-    font-size: 1.95rem;
+    font-size: 1.92rem;
   }
 
   .card-header h2 {
-    font-size: 1.8rem;
+    font-size: 1.78rem;
   }
 }
