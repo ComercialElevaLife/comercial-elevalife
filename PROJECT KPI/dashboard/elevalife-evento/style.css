@@ -132,6 +132,16 @@ body {
   line-height: 1.25;
 }
 
+.ebook-cover-image {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 14px auto 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 14px 28px rgba(28, 8, 16, 0.35);
+}
+
 .iceberg {
   width: 164px;
   margin: 16px auto 0;
