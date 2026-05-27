@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="1048" viewBox="0 0 640 1048" role="img" aria-label="Capa do e-book NR-1 e Riscos Psicossociais">
+  <defs>
+    <linearGradient id="bgTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e86bd"/>
+      <stop offset="100%" stop-color="#0f5e96"/>
+    </linearGradient>
+    <linearGradient id="bgBottom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f476f"/>
+      <stop offset="100%" stop-color="#09345b"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="640" height="1048" fill="#ffffff"/>
+  <rect x="4" y="4" width="632" height="1040" fill="url(#bgTop)"/>
+  <rect x="4" y="540" width="632" height="504" fill="url(#bgBottom)"/>
+
+  <text x="320" y="86" text-anchor="middle" fill="#e8f6ff" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700">elevalife</text>
+
+  <text x="80" y="158" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="700" letter-spacing="1">NR-1 E RISCOS</text>
+  <text x="80" y="236" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="700" letter-spacing="1">PSICOSSOCIAIS</text>
+
+  <text x="84" y="352" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="128" font-weight="700">7</text>
+  <text x="196" y="322" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="700">INDICADORES</text>
+  <text x="196" y="374" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="700">ESSENCIAIS</text>
+  <text x="196" y="426" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="700">PARA</text>
+  <text x="196" y="478" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="700">MONITORAR NAS</text>
+  <text x="196" y="530" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="700">EMPRESAS</text>
+
+  <polygon points="140,560 210,470 270,560" fill="#aac6e6"/>
+  <polygon points="210,470 290,430 330,500 270,560" fill="#9dbce0"/>
+  <polygon points="330,500 420,450 470,560 360,590" fill="#8fafd7"/>
+  <polygon points="120,560 160,630 250,630 210,560" fill="#5a99c9"/>
+  <polygon points="250,630 340,620 360,590 270,560" fill="#75add8"/>
+  <polygon points="360,590 470,560 500,620 400,640" fill="#3c7fb5"/>
+
+  <polygon points="140,560 220,760 270,760 250,630 160,630" fill="#375fbc"/>
+  <polygon points="250,630 270,760 340,760 340,620" fill="#6ba6d8"/>
+  <polygon points="340,620 340,760 420,740 400,640" fill="#5f9ed3"/>
+  <polygon points="400,640 420,740 500,700 500,620" fill="#284ea9"/>
+  <polygon points="220,760 320,920 340,760" fill="#2f4ca2"/>
+
+  <text x="320" y="868" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700">Como identificar sinais de alerta e estruturar</text>
+  <text x="320" y="907" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700">a Gestão de Riscos Psicossociais no</text>
+  <text x="320" y="946" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700">ambiente de trabalho</text>
+</svg>
