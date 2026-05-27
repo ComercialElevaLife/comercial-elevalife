@@ -478,8 +478,8 @@ select:focus-visible {
 }
 
 .crm-kanban-card .kanban-board {
-  grid-template-columns: 1fr;
-  max-height: 62vh;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  max-height: 66vh;
   overflow: auto;
   padding-right: 0.2rem;
 }
@@ -510,6 +510,8 @@ select:focus-visible {
 .kanban-column:nth-child(1) { background: #f4fbfc; }
 .kanban-column:nth-child(2) { background: #f8fcf7; }
 .kanban-column:nth-child(3) { background: #f3f9f7; }
+.kanban-column:nth-child(4) { background: #fff5f3; }
+.kanban-column:nth-child(5) { background: #fff7f1; }
 
 .kanban-column-head {
   display: flex;
@@ -628,7 +630,7 @@ select:focus-visible {
 
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.88rem;
 }
 
@@ -658,7 +660,7 @@ select:focus-visible {
 
 .compact-donuts-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
   gap: 0.65rem;
   margin-top: 0.75rem;
 }
@@ -1102,12 +1104,12 @@ tbody tr:hover { background: #f2fbfc; }
   .painel-layout,
   .painel-layout:not(.filters-open) { grid-template-columns: 300px minmax(0, 1fr); }
   .meta-top-grid { grid-template-columns: 1fr; }
-  .charts-grid { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+  .charts-grid { grid-template-columns: 1fr; }
   .compact-donuts-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
   .crm-workspace { grid-template-columns: 1fr; }
   .crm-kanban-card { max-height: none; min-height: 0; }
   .crm-kanban-card .kanban-board {
-    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
     max-height: 50vh;
   }
   .chart { min-height: 380px; }

@@ -76,7 +76,8 @@ const MONTH_ALIAS = {
   DEZEMBRO: "DEZ", DEZ: "DEZ",
 };
 const QUARTER_ORDER = ["Q1", "Q2", "Q3", "Q4"];
-const KANBAN_STAGES = ["Lead", "Proposta", "Venda"];
+const CORE_STAGES = ["Lead", "Proposta", "Venda"];
+const KANBAN_STAGES = [...CORE_STAGES, "Perdida", "Cancelada"];
 const chartIds = [
   "chartFunilComercial",
   "chartMapaVendas",
@@ -1080,9 +1081,25 @@ function resolveLeadIdForDetailRow(row) {
 
   const rowCompany = normalizeLookupText(row?.Empresa || row?.Cliente);
   const rowService = normalizeLookupText(row?.["Serviço"]);
+  const rowUnit = normalizeLookupText(row?.Unidade);
   const rowName = normalizeLookupText(row?.Nome);
   const hasLookupFields = rowCompany || rowService || rowName;
   if (!hasLookupFields) return "";
+
+  const strictCandidates = leads.filter((lead) => {
+    const leadCompany = normalizeLookupText(lead?.Empresa);
+    const leadService = normalizeLookupText(lead?.["Serviço"]);
+    const leadUnit = normalizeLookupText(lead?.Unidade);
+    if (rowCompany && leadCompany !== rowCompany) return false;
+    if (rowService && leadService !== rowService) return false;
+    if (rowUnit && leadUnit && leadUnit !== rowUnit) return false;
+    return true;
+  });
+  if (rowName) {
+    const byName = strictCandidates.filter((lead) => normalizeLookupText(lead?.Nome) === rowName);
+    if (byName.length === 1) return byName[0].LeadId;
+  }
+  if (strictCandidates.length === 1) return strictCandidates[0].LeadId;
 
   const vendasAll = getMergedVendasRaw();
   let bestLeadId = "";
@@ -1100,8 +1117,8 @@ function resolveLeadIdForDetailRow(row) {
     }
   }
 
-  if (bestScore < 70) return "";
-  if (secondBest >= 0 && bestScore - secondBest < 10) return "";
+  if (bestScore < 45) return "";
+  if (secondBest >= 0 && bestScore - secondBest < 4) return "";
   return bestLeadId;
 }
 
@@ -1836,7 +1853,6 @@ function renderChartVendas(vendasRows) {
   const yValue = [...valueSeries.values];
   const yCountMap = new Map(countSeries.keys.map((k, idx) => [k, countSeries.values[idx]]));
   const yCount = periodKeys.map((k) => toNumber(yCountMap.get(k)));
-  const anomalies = detectAnomalies(yValue);
   const nextForecast = linearForecast(yValue, 1);
   const lastPeriodDate = periodKeyToDate(periodKeys[periodKeys.length - 1]);
   const nextPeriodDate = lastPeriodDate ? addMonths(lastPeriodDate, 1) : null;
@@ -1862,19 +1878,6 @@ function renderChartVendas(vendasRows) {
         line: { color: CHART_THEME.forecast, width: 2, dash: "dash" },
         marker: { size: 7 },
         hovertemplate: "<b>%{x}</b><br>Previsão: R$ %{y:,.2f}<extra></extra>",
-      }] : []),
-      ...(anomalies.length ? [{
-        type: "scatter",
-        mode: "markers+text",
-        x: anomalies.map((a) => x[a.index]),
-        y: anomalies.map((a) => yValue[a.index]),
-        customdata: anomalies.map((a) => periodKeys[a.index]),
-        yaxis: "y2",
-        name: "Anomalia",
-        text: anomalies.map(() => "Alerta"),
-        textposition: "top center",
-        marker: { color: CHART_THEME.planned, size: 12, symbol: "diamond" },
-        hovertemplate: "<b>%{x}</b><br>Valor atípico: R$ %{y:,.2f}<extra></extra>",
       }] : []),
     ],
     baseLayout({
@@ -2646,6 +2649,8 @@ function normalizeLeadStage(value) {
   if (upper === "LEAD") return "Lead";
   if (upper === "PROPOSTA") return "Proposta";
   if (upper === "VENDA") return "Venda";
+  if (upper === "PERDIDA" || upper === "PERDA") return "Perdida";
+  if (upper === "CANCELADA" || upper === "CANCELADO") return "Cancelada";
   return "";
 }
 
@@ -3203,6 +3208,26 @@ function leadHasProposta(leadRow, vendasRows) {
   return leadHasVenda(leadRow, vendasRows);
 }
 
+function isLeadLost(leadRow) {
+  return String(leadRow?.["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
+}
+
+function isLeadCancelled(leadRow, vendasRows) {
+  if (String(leadRow?.["Status Oportunidade"] || "").toUpperCase() === "CANCELADA") return true;
+  const relatedAll = getRelatedSalesForLead(leadRow, vendasRows || getMergedVendasRaw(), { mode: "all_matches" });
+  const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale));
+  const hasActive = relatedAll.some((sale) => !isSaleCancelled(sale));
+  if (hasCancelled && !hasActive) return true;
+  const obs = String(leadRow?.["Observação Proposta"] || "").toUpperCase();
+  return obs.includes("VENDA CANCELADA");
+}
+
+function getKanbanStage(leadRow, vendasRows) {
+  if (isLeadLost(leadRow)) return "Perdida";
+  if (isLeadCancelled(leadRow, vendasRows)) return "Cancelada";
+  return getLeadStage(leadRow, vendasRows);
+}
+
 function passesCrmSharedFilters(lead, vendasRows) {
   if (state.filters.ano.size && !state.filters.ano.has(lead["Ano"])) return false;
   if (state.filters.quarter.size && !state.filters.quarter.has(lead["Quarter"])) return false;
@@ -3227,9 +3252,12 @@ function getFilteredLeads(leads, vendasRows) {
   return leads.filter((lead) => {
     if (!passesCrmSharedFilters(lead, vendasRows)) return false;
     const stage = getLeadStage(lead, vendasRows);
-    const lost = String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
+    const lost = isLeadLost(lead);
+    const cancelled = isLeadCancelled(lead, getMergedVendasRaw());
     if (stageFilter === "PERDIDA") {
       if (!lost) return false;
+    } else if (stageFilter === "CANCELADA") {
+      if (!cancelled) return false;
     } else if (stageFilter !== "TODOS" && stage !== stageFilter) {
       return false;
     }
@@ -3254,6 +3282,7 @@ function getFilteredLeads(leads, vendasRows) {
 function stageBadgeClass(stage) {
   if (stage === "Venda") return "stage-badge venda";
   if (stage === "Proposta") return "stage-badge proposta";
+  if (stage === "Perdida" || stage === "Cancelada") return "stage-badge cancelada";
   return "stage-badge lead";
 }
 
@@ -3261,7 +3290,8 @@ function renderCrmOverview(leads, vendasRows) {
   const totalLeads = leads.length;
   const totalPropostas = leads.filter((lead) => leadHasProposta(lead, vendasRows)).length;
   const totalVendas = leads.filter((lead) => leadHasVenda(lead, vendasRows)).length;
-  const lostLeads = leads.filter((lead) => String(lead["Status Oportunidade"] || "").toUpperCase() === "PERDIDA").length;
+  const lostLeads = leads.filter((lead) => isLeadLost(lead)).length;
+  const cancelledLeads = leads.filter((lead) => isLeadCancelled(lead, getMergedVendasRaw())).length;
   const conversao = totalPropostas > 0 ? (totalVendas / totalPropostas) * 100 : 0;
   const taxaPerda = totalPropostas > 0 ? (lostLeads / totalPropostas) * 100 : 0;
   const valorPropostas = leads.reduce((sum, lead) => sum + toNumber(lead["Valor Proposta"]), 0);
@@ -3293,10 +3323,11 @@ function renderCrmOverview(leads, vendasRows) {
     Proposta: leads.filter((lead) => getLeadStage(lead, vendasRows) === "Proposta").length,
     Venda: totalVendas,
     Perdida: lostLeads,
+    Cancelada: cancelledLeads,
   };
-  const maxVal = Math.max(1, stageCount.Lead, stageCount.Proposta, stageCount.Venda, stageCount.Perdida);
+  const maxVal = Math.max(1, stageCount.Lead, stageCount.Proposta, stageCount.Venda, stageCount.Perdida, stageCount.Cancelada);
   refs.crmStageBars.innerHTML = "";
-  ["Lead", "Proposta", "Venda", "Perdida"].forEach((stage) => {
+  ["Lead", "Proposta", "Venda", "Perdida", "Cancelada"].forEach((stage) => {
     const row = document.createElement("div");
     row.className = "crm-stage-row";
     const label = document.createElement("span");
@@ -3306,7 +3337,7 @@ function renderCrmOverview(leads, vendasRows) {
     track.className = "crm-stage-track";
     const fill = document.createElement("div");
     fill.className = "crm-stage-fill";
-    if (stage === "Perdida") fill.classList.add("crm-stage-fill-loss");
+    if (stage === "Perdida" || stage === "Cancelada") fill.classList.add("crm-stage-fill-loss");
     fill.style.width = `${(stageCount[stage] / maxVal) * 100}%`;
     track.appendChild(fill);
     const value = document.createElement("span");
@@ -3678,7 +3709,8 @@ function reconcileLeadsFromSalesBase() {
     const updated = normalizeLeadRecord({
       ...lead,
       "Status Lead": "Proposta",
-      "Status Manual": "Proposta",
+      "Status Manual": "Cancelada",
+      "Status Oportunidade": "Cancelada",
       "Vendido?": "N",
       "Data da venda": "",
       "Valor Venda": 0,
@@ -3702,7 +3734,7 @@ function updateLeadStage(leadId, targetStage, source = "kanban") {
   if (!lead) return;
   const toStage = normalizeLeadStage(targetStage);
   if (!toStage) return;
-  const fromStage = getLeadStage(lead, getActiveVendas());
+  const fromStage = getKanbanStage(lead, getMergedVendasRaw());
   if (fromStage === toStage) return;
 
   lead["Status Lead"] = toStage;
@@ -3738,6 +3770,29 @@ function updateLeadStage(leadId, targetStage, source = "kanban") {
     lead["Motivo Perda"] = "";
     lead["Data da perda"] = "";
     ensureSaleFromLead(lead);
+  } else if (toStage === "Perdida") {
+    lead["Status Lead"] = "Proposta";
+    lead["Status Manual"] = "Perdida";
+    lead["Proposta Enviada ?"] = "S";
+    lead["Vendido?"] = "N";
+    lead["Data da venda"] = "";
+    lead["Valor Venda"] = 0;
+    lead["Status Oportunidade"] = "Perdida";
+    lead["Motivo Perda"] = String(lead["Motivo Perda"] || "").trim() || "Movida para Perdida no Kanban";
+    lead["Data da perda"] = new Date().toISOString().slice(0, 10);
+    lead["Venda Match Id"] = "";
+  } else if (toStage === "Cancelada") {
+    lead["Status Lead"] = "Proposta";
+    lead["Status Manual"] = "Cancelada";
+    lead["Proposta Enviada ?"] = "S";
+    lead["Vendido?"] = "N";
+    lead["Data da venda"] = "";
+    lead["Valor Venda"] = 0;
+    lead["Status Oportunidade"] = "Cancelada";
+    lead["Motivo Perda"] = "";
+    lead["Data da perda"] = "";
+    lead["Venda Match Id"] = "";
+    lead["Observação Proposta"] = String(lead["Observação Proposta"] || "").trim() || "Venda cancelada via Kanban.";
   }
 
   recordLeadStageHistory(lead, fromStage, toStage, source);
@@ -3809,7 +3864,7 @@ function renderCrmKanban(leads, vendasRows) {
   refs.crmKanban.innerHTML = "";
   const grouped = new Map(KANBAN_STAGES.map((stage) => [stage, []]));
   for (const lead of leads) {
-    const stage = normalizeLeadStage(getLeadStage(lead, vendasRows)) || "Lead";
+    const stage = getKanbanStage(lead, vendasRows);
     grouped.get(stage).push(lead);
   }
 
@@ -3942,15 +3997,16 @@ function renderLeadTable() {
         td.textContent = valueOrDash(row["Observação Proposta"]);
       } else if (c === "Status Lead") {
         const badge = document.createElement("span");
-        const stage = getLeadStage(row, vendasAtivas);
+        const stage = getKanbanStage(row, getMergedVendasRaw());
         badge.className = stageBadgeClass(stage);
         badge.textContent = stage;
         td.appendChild(badge);
       } else if (c === "Situação Venda") {
-        const relatedAll = getRelatedSalesForLead(row, getMergedVendasRaw());
+        const relatedAll = getRelatedSalesForLead(row, getMergedVendasRaw(), { mode: "all_matches" });
         const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale));
         const hasActive = relatedAll.some((sale) => !isSaleCancelled(sale));
-        const lost = String(row["Status Oportunidade"] || "").toUpperCase() === "PERDIDA";
+        const lost = isLeadLost(row);
+        const cancelled = isLeadCancelled(row, getMergedVendasRaw());
         const badge = document.createElement("span");
         badge.className = "stage-badge";
         if (hasActive) {
@@ -3959,7 +4015,7 @@ function renderLeadTable() {
         } else if (lost) {
           badge.classList.add("cancelada");
           badge.textContent = "Perdida";
-        } else if (hasCancelled) {
+        } else if (cancelled || hasCancelled) {
           badge.classList.add("cancelada");
           badge.textContent = "Cancelada";
         } else {
@@ -4008,9 +4064,10 @@ function getLeadStage(leadRow, vendasRows) {
 }
 
 function createLeadStageTrail(leadRow, vendasRows) {
-  const stage = getLeadStage(leadRow, vendasRows);
-  const stageOrder = ["Lead", "Proposta", "Venda"];
-  const idx = stageOrder.indexOf(stage);
+  const stage = getKanbanStage(leadRow, vendasRows);
+  const stageOrder = [...CORE_STAGES];
+  let idx = stageOrder.indexOf(stage);
+  if (idx < 0) idx = stage === "Cancelada" ? 2 : 1;
   const wrap = document.createElement("div");
   wrap.className = "stage-track";
 
@@ -4078,7 +4135,8 @@ function openLeadConversionModal(leadId) {
     refs.leadFinanceStatus.value = String(lead["Status Financeiro"] || "A faturar");
   }
   const relatedAll = getRelatedSalesForLead(lead, getMergedVendasRaw());
-  const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale));
+  const statusOpp = String(lead["Status Oportunidade"] || "").toUpperCase();
+  const hasCancelled = relatedAll.some((sale) => isSaleCancelled(sale)) || statusOpp === "CANCELADA";
   refs.leadSaleStatus.value = hasCancelled && String(lead["Vendido?"] || "").toUpperCase() !== "S" ? "CANCELADA" : "ATIVA";
   refs.leadSaleSocio.value = "N";
   refs.leadSaleObs.value = "";
@@ -4189,7 +4247,7 @@ function processLeadConversion() {
     lead["Proposta Enviada ?"] = "S";
     lead["Data de envio"] = lead["Data de envio"] || saleDate;
     lead["Status Lead"] = "Proposta";
-    lead["Status Manual"] = "Proposta";
+    lead["Status Manual"] = "Perdida";
     lead["Status Oportunidade"] = "Perdida";
     lead["Motivo Perda"] = lossReason;
     lead["Data da perda"] = saleDate;
@@ -4227,7 +4285,7 @@ function processLeadConversion() {
     lead["Data de envio"] = lead["Data de envio"] || saleDate;
     lead["Observação Proposta"] = `Venda cancelada em ${formatDateBr(saleDate)}. ${cancelReason}`;
     lead["Status Lead"] = "Proposta";
-    lead["Status Manual"] = "Proposta";
+    lead["Status Manual"] = "Cancelada";
     lead["Vendido?"] = "N";
     lead["Data da venda"] = "";
     lead["Valor Venda"] = 0;
@@ -4236,7 +4294,7 @@ function processLeadConversion() {
     lead["Data Prevista Pagamento"] = "";
     lead["Status Financeiro"] = "";
     lead["Venda Match Id"] = "";
-    lead["Status Oportunidade"] = "Aberta";
+    lead["Status Oportunidade"] = "Cancelada";
     lead["Motivo Perda"] = "";
     lead["Data da perda"] = "";
     lead["Histórico Proposta"] = historico;
