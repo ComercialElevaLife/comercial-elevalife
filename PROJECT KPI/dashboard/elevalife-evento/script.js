@@ -1,4 +1,4 @@
-const SCRIPT_URL = "INSERIR_URL_DO_GOOGLE_APPS_SCRIPT_AQUI";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVCO5q3eiD-kpo81vZkK9N61GG8v7Ug5GvY2QqiNG3OfbJcEkvijNoljW8HHZyhwRKOg/exec";
 const EBOOK_URL = "https://elevalife-my.sharepoint.com/:b:/g/personal/leonardo_elevalife_com_br/IQBzo0-PPIipRZn9TXQItNchAfV2Ph436NAuZmqrDDTrtOk";
 const ORIGEM = "Evento presencial - QR Code e-book NR-1";
 
@@ -15,6 +15,12 @@ let lastSubmitTs = 0;
 
 if (EBOOK_URL && EBOOK_URL !== "INSERIR_LINK_DO_EBOOK_AQUI") {
   downloadButton.href = EBOOK_URL;
+} else {
+  downloadButton.href = "#";
+  downloadButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    showFeedback("Configure o link do e-book na constante EBOOK_URL antes de publicar.");
+  });
 }
 
 phoneInput.addEventListener("input", (event) => {
@@ -23,6 +29,7 @@ phoneInput.addEventListener("input", (event) => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+
   if (isSubmitting) return;
 
   const now = Date.now();
@@ -57,14 +64,19 @@ form.addEventListener("submit", async (event) => {
   showFeedback("Enviando seus dados...", true);
 
   try {
+    const params = new URLSearchParams(payload);
     const response = await fetch(SCRIPT_URL, {
       method: "POST",
-      body: new URLSearchParams(payload)
+      body: params
     });
 
     const result = await safeJson(response);
 
-    if (!response.ok || (result.status && result.status !== "success")) {
+    if (!response.ok) {
+      throw new Error(result.message || "Não foi possível concluir o envio.");
+    }
+
+    if (result.status && result.status !== "success") {
       throw new Error(result.message || "Não foi possível concluir o envio.");
     }
 
@@ -89,10 +101,22 @@ function validateForm() {
   const colaboradores = form.colaboradores.value;
   const consentimento = form.consentimento.checked;
 
-  if (!nome || !telefone || !email || !empresa || !cargo || !colaboradores) return "Preencha todos os campos obrigatórios.";
-  if (!isValidEmail(email)) return "Digite um e-mail corporativo válido.";
-  if (!isValidPhone(telefone)) return "Digite um telefone/WhatsApp completo no formato (00) 00000-0000.";
-  if (!consentimento) return "Para continuar, marque a autorização de contato.";
+  if (!nome || !telefone || !email || !empresa || !cargo || !colaboradores) {
+    return "Preencha todos os campos obrigatórios.";
+  }
+
+  if (!isValidEmail(email)) {
+    return "Digite um e-mail corporativo válido.";
+  }
+
+  if (!isValidPhone(telefone)) {
+    return "Digite um telefone/WhatsApp completo no formato (00) 00000-0000.";
+  }
+
+  if (!consentimento) {
+    return "Para continuar, marque a autorização de contato.";
+  }
+
   return null;
 }
 
@@ -119,7 +143,8 @@ function isValidEmail(email) {
 }
 
 function isValidPhone(phone) {
-  return phone.replace(/\D/g, "").length === 11;
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 11;
 }
 
 function formatBrazilPhone(value) {
